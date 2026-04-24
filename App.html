@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VidChat</title>
+<style>
+:root{--blue:#1a73e8;--dark:#0d47a1;--green:#34a853;--red:#ea4335;--purple:#7c4dff;
+      --bg:#f0f4f8;--room-bg:#1a1a2e;--room-panel:#16213e;--room-card:#0f3460}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif}
+.view{display:none}.view.active{display:flex}.hidden{display:none!important}
+
+/* Page loader */
+.pg-loader{display:none;position:fixed;inset:0;background:rgba(255,255,255,.88);z-index:9999;
+           align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.pg-loader.show{display:flex}
+.pg-loader p{color:#555;font-size:14px}
+
+/* Spinner */
+.spin{display:inline-block;border-radius:50%;animation:doSpin .8s linear infinite}
+@keyframes doSpin{to{transform:rotate(360deg)}}
+
+/* Auth layout */
+.auth-screen{background:var(--bg);min-height:100vh;
+             align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.12);
+      width:100%;max-width:440px;overflow:hidden}
+.card-header{padding:30px;text-align:center;color:#fff}
+.card-header .logo{font-size:46px;margin-bottom:8px}
+.card-header h1{font-size:22px;font-weight:700}
+.card-header p{opacity:.85;font-size:13px;margin-top:5px}
+.card-body{padding:26px}
+
+/* Forms */
+.fg{margin-bottom:16px}
+label{display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:6px}
+input{width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:8px;
+      font-size:14px;transition:.2s;outline:none}
+input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
+
+/* Buttons */
+.btn{width:100%;padding:13px;border:none;border-radius:8px;font-size:15px;
+     font-weight:600;cursor:pointer;transition:.2s;margin-top:4px}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:var(--dark)}
+.btn-green{background:var(--green);color:#fff;margin-top:8px}
+.btn-green:hover{background:#2d8f47}
+.btn-purple{background:var(--purple);color:#fff}.btn-purple:hover{background:#5e35b1}
+.btn-gray{background:#f5f5f5;color:#333;margin-top:10px}.btn-gray:hover{background:#e0e0e0}
+
+/* Tabs */
+.tabs{display:flex;background:#f5f5f5;border-radius:8px;padding:4px;margin-bottom:22px}
+.tab{flex:1;padding:10px;text-align:center;border:none;background:transparent;
+     border-radius:6px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s}
+.tab.active{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.1);color:var(--blue)}
+
+/* Alerts */
+.alert{padding:12px 14px;border-radius:8px;font-size:14px;margin-bottom:14px;display:none}
+.alert-error{background:#fce8e6;color:var(--red);border:1px solid #f5c6c3}
+.alert-success{background:#e6f4ea;color:#1e8e3e;border:1px solid #a8d5b5}
+
+/* Form spinner */
+.fspin{display:none;text-align:center;padding:8px}
+
+/* Divider */
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0;font-size:12px;color:#999}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#e0e0e0}
+
+/* Password strength */
+.strength{height:4px;border-radius:2px;margin-top:6px;background:#e0e0e0;overflow:hidden}
+.strength-bar{height:100%;width:0;transition:.3s;border-radius:2px}
+.hint{font-size:12px;color:#888;margin-top:4px}
+
+/* Room badge on join page */
+.room-badge{background:rgba(255,255,255,.2);border-radius:8px;
+            padding:8px 16px;font-size:14px;margin-top:12px;
+            display:inline-block;font-family:monospace}
+
+/* Light modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
+          z-index:2000;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal-box{background:#fff;border-radius:16px;padding:28px;
+           width:100%;max-width:430px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-box h3{margin-bottom:18px;color:#333;font-size:18px}
+.inv-box{background:#f0f7ff;border:2px dashed var(--blue);border-radius:8px;
+         padding:14px;font-size:12px;word-break:break-all;
+         color:#333;font-family:monospace;margin:12px 0}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;background:#333;color:#fff;
+       padding:12px 18px;border-radius:10px;font-size:13px;z-index:9999;
+       transform:translateY(100px);transition:.3s;opacity:0;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* ── ROOM VIEW ── */
+#viewRoom{background:var(--room-bg);color:#fff;height:100vh;
+          flex-direction:column;overflow:hidden}
+.topbar{background:var(--room-panel);padding:10px 16px;display:flex;
+        align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.1);
+        flex-shrink:0;flex-wrap:wrap}
+.topbar .logo{font-size:19px;font-weight:700}
+.room-idtag{background:rgba(255,255,255,.1);border-radius:6px;
+            padding:4px 10px;font-size:12px;font-family:monospace;color:#adb5bd}
+.tr{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.sb{padding:7px 12px;border:none;border-radius:6px;font-size:12px;
+    font-weight:600;cursor:pointer;transition:.2s;white-space:nowrap}
+.sb-blue{background:var(--blue);color:#fff}
+.sb-green{background:var(--green);color:#fff}
+.sb-red{background:var(--red);color:#fff}
+.sb-purple{background:var(--purple);color:#fff}
+.sb-gray{background:#495057;color:#fff}
+.rm-main{display:flex;flex:1;overflow:hidden}
+.video-area{flex:1;display:flex;flex-direction:column;min-width:0}
+#jitsiWrap{flex:1;background:#000;display:flex;align-items:center;justify-content:center}
+.side{width:340px;background:var(--room-panel);
+      border-left:1px solid rgba(255,255,255,.1);
+      display:flex;flex-direction:column;flex-shrink:0}
+.ptabs{display:flex;border-bottom:1px solid rgba(255,255,255,.1)}
+.ptab{flex:1;padding:12px 6px;text-align:center;cursor:pointer;font-size:12px;
+      font-weight:600;border:none;background:transparent;color:#adb5bd;
+      border-bottom:2px solid transparent;transition:.2s}
+.ptab.active{color:#fff;border-bottom-color:var(--blue)}
+.pcontent{display:none;flex:1;flex-direction:column;min-height:0}
+.pcontent.active{display:flex}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.cmsg{max-width:85%;padding:8px 12px;border-radius:12px;font-size:13px;
+      line-height:1.5;word-break:break-word}
+.cmsg.me{background:var(--blue);align-self:flex-end;border-bottom-right-radius:3px}
+.cmsg.other{background:var(--room-card);align-self:flex-start;border-bottom-left-radius:3px}
+.cmsg .sndr{font-size:10px;opacity:.7;margin-bottom:3px}
+.chat-in{padding:10px;border-top:1px solid rgba(255,255,255,.1);display:flex;gap:8px}
+.chat-ta{flex:1;background:var(--room-card);border:1px solid rgba(255,255,255,.2);
+         border-radius:8px;padding:10px;color:#fff;font-size:13px;outline:none;resize:none}
+.chat-ta::placeholder{color:#6c757d}
+.notes-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.ntitle{font-size:11px;font-weight:700;color:#adb5bd;
+        text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.tarea{background:var(--room-card);border-radius:8px;padding:10px;font-size:12px;
+       color:#ccc;min-height:120px;max-height:175px;overflow-y:auto;
+       line-height:1.7;border:1px solid rgba(255,255,255,.1)}
+.mnotes{width:100%;background:var(--room-card);border:1px solid rgba(255,255,255,.2);
+        border-radius:8px;padding:10px;color:#fff;font-size:13px;
+        min-height:100px;resize:vertical;outline:none;line-height:1.6}
+.mnotes::placeholder{color:#6c757d}
+.sbadge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;
+        border-radius:12px;font-size:11px;font-weight:600}
+.sb-rec{background:rgba(234,67,53,.2);color:#ff6b6b;border:1px solid rgba(234,67,53,.3)}
+.sb-idle{background:rgba(108,117,125,.2);color:#adb5bd;border:1px solid rgba(108,117,125,.3)}
+.pulse{width:8px;height:8px;border-radius:50%;background:#ff6b6b;
+       animation:pulseA 1s ease-in-out infinite}
+@keyframes pulseA{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+
+/* Dark modal for room */
+.dmodal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
+           z-index:2000;align-items:center;justify-content:center;padding:20px}
+.dmodal-bg.show{display:flex}
+.dmodal-box{background:var(--room-panel);border-radius:16px;padding:28px;
+            width:100%;max-width:460px;border:1px solid rgba(255,255,255,.1)}
+.dmodal-box h3{margin-bottom:16px;font-size:18px;color:#fff}
+.dinv-box{background:var(--room-bg);border:1px dashed rgba(255,255,255,.3);
+          border-radius:8px;padding:12px;font-size:12px;font-family:monospace;
+          word-break:break-all;color:#adb5bd;margin:12px 0}
+.res-link{background:var(--room-card);border:1px solid rgba(255,255,255,.1);
+          border-radius:8px;padding:12px;font-size:12px;word-break:break-all;
+          color:#81c784;margin:10px 0}
+
+/* Room loader */
+.rm-loader{display:none;position:fixed;inset:0;background:rgba(26,26,46,.92);
+           z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.rm-loader.show{display:flex}
+.rm-loader p{color:#adb5bd;font-size:14px}
+
+@media(max-width:768px){
+  .side{width:100%;max-height:290px;border-left:none;
+        border-top:1px solid rgba(255,255,255,.1)}
+  .rm-main{flex-direction:column}
+  #jitsiWrap{min-height:200px}
+}
+</style>
+</head>
+<body>
+
+<!-- Server injects current page and room id -->
+<script>
+  var INITIAL_PAGE    = '<?= initialPage ?>';
+  var INITIAL_ROOM_ID = '<?= initialRoomId ?>';
+</script>
+
+<!-- ── Shared page loader ── -->
+<div class="pg-loader" id="pgLoader">
+  <div class="spin" style="width:36px;height:36px;border:4px solid #e0e0e0;border-top-color:var(--blue)"></div>
+  <p id="pgLoaderMsg">Memuatkan... / Loading...</p>
+</div>
+
+<!-- ── Shared toast ── -->
+<div class="toast" id="toast"></div>
+
+<!-- ================================================================
+     VIEW 1 — HOME  (Login + Create Room)
+     ================================================================ -->
+<div id="viewHome" class="view auth-screen">
+  <div class="card">
+    <div class="card-header" style="background:linear-gradient(135deg,#1a73e8,#0d47a1)">
+      <div class="logo">📹</div>
+      <h1>VidChat</h1>
+      <p>Video Call · Chat · Nota Automatik</p>
+    </div>
+    <div class="card-body">
+
+      <div class="tabs">
+        <button class="tab active" id="hTabLogin"  onclick="homeTab('login')">🔑 Log Masuk</button>
+        <button class="tab"        id="hTabCreate" onclick="homeTab('create')">➕ Buat Bilik</button>
+      </div>
+
+      <div id="homeAlert" class="alert"></div>
+
+      <!-- Login sub-panel -->
+      <div id="hPanelLogin">
+        <div class="fg">
+          <label>📧 E-mel</label>
+          <input type="email" id="loginEmail" placeholder="nama@email.com">
+        </div>
+        <div class="fg">
+          <label>🔒 Kata Laluan / Password</label>
+          <input type="password" id="loginPass" placeholder="••••••••"
+                 onkeypress="if(event.key==='Enter') doLogin()">
+        </div>
+        <div class="fspin" id="spLogin">
+          <div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:var(--blue)"></div>
+        </div>
+        <button class="btn btn-blue" onclick="doLogin()">Log Masuk / Login</button>
+        <div class="divider">atau / or</div>
+        <button class="btn btn-gray" onclick="showView('register')">
+          📝 Daftar Akaun Baru / Register
+        </button>
+      </div>
+
+      <!-- Create room sub-panel -->
+      <div id="hPanelCreate" class="hidden">
+        <div id="homeGreeting"
+          style="background:#e8f5e9;border-radius:8px;padding:12px 14px;
+                 margin-bottom:16px;font-size:14px;color:#2e7d32"></div>
+        <div class="fg">
+          <label>🏠 Nama Bilik / Room Name</label>
+          <input type="text" id="roomName" placeholder="cth: Mesyuarat Projek ABC">
+        </div>
+        <div class="fspin" id="spRoom">
+          <div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:var(--blue)"></div>
+        </div>
+        <button class="btn btn-green" onclick="doCreateRoom()">
+          🚀 Buat &amp; Masuk Bilik / Create Room
+        </button>
+        <button class="btn btn-gray" onclick="doLogout()" style="margin-top:10px">
+          🚪 Log Keluar / Logout
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Invite modal -->
+  <div class="modal-bg" id="inviteModal">
+    <div class="modal-box">
+      <h3>🎉 Bilik Berjaya Dibuat!</h3>
+      <p style="font-size:14px;color:#555;margin-bottom:10px">
+        Kongsikan pautan ini kepada peserta lain:<br>
+        <em>Share this link with other participants:</em>
+      </p>
+      <div class="inv-box" id="homeInviteLink"></div>
+      <button class="btn btn-blue"  onclick="homeCopyLink()">📋 Salin Pautan / Copy Link</button>
+      <button class="btn btn-green" onclick="homeProceedToRoom()" style="margin-top:8px">
+        🚀 Masuk Bilik Sekarang / Enter Room
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     VIEW 2 — REGISTER
+     ================================================================ -->
+<div id="viewRegister" class="view auth-screen">
+  <div class="card">
+    <div class="card-header" style="background:linear-gradient(135deg,#34a853,#1e6e3e)">
+      <div class="logo">📝</div>
+      <h1>Daftar Akaun / Register</h1>
+      <p>VidChat — Sila daftar untuk menggunakan perkhidmatan</p>
+    </div>
+    <div class="card-body">
+      <div id="regAlert" class="alert"></div>
+      <div class="fg">
+        <label>👤 Nama Penuh / Full Name</label>
+        <input type="text" id="regName" placeholder="Masukkan nama penuh anda">
+      </div>
+      <div class="fg">
+        <label>📧 Alamat E-mel / Email Address</label>
+        <input type="email" id="regEmail" placeholder="nama@email.com">
+      </div>
+      <div class="fg">
+        <label>🔒 Kata Laluan / Password</label>
+        <input type="password" id="regPass" placeholder="Min. 8 aksara"
+               oninput="checkStrength(this.value)">
+        <div class="strength"><div class="strength-bar" id="strBar"></div></div>
+        <div class="hint" id="strText">Sekurang-kurangnya 8 aksara / At least 8 characters</div>
+      </div>
+      <div class="fg">
+        <label>🔒 Sahkan Kata Laluan / Confirm Password</label>
+        <input type="password" id="regPass2" placeholder="Taip semula kata laluan"
+               onkeypress="if(event.key==='Enter') doRegister()">
+      </div>
+      <div class="fspin" id="spReg">
+        <div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:var(--green)"></div>
+      </div>
+      <button class="btn btn-green" onclick="doRegister()">✅ Daftar Sekarang / Register Now</button>
+      <button class="btn btn-gray"  onclick="showView('home')">← Kembali / Back to Login</button>
+      <p style="font-size:12px;color:#888;text-align:center;margin-top:14px;line-height:1.5">
+        Dengan mendaftar, anda bersetuju dengan terma penggunaan.<br>
+        By registering, you agree to the terms of service.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     VIEW 3 — JOIN ROOM  (invite link landing)
+     ================================================================ -->
+<div id="viewJoin" class="view auth-screen">
+  <div class="card">
+    <div class="card-header" style="background:linear-gradient(135deg,#7c4dff,#3d1a8c)">
+      <div class="logo">📹</div>
+      <h2>Jemputan VidChat / Invite</h2>
+      <div class="room-badge" id="joinRoomBadge">🔑 Room: ...</div>
+    </div>
+    <div class="card-body">
+      <div id="joinAlert" class="alert"></div>
+
+      <div class="tabs">
+        <button class="tab active" id="jTabLogin" onclick="joinTab('login')">🔑 Log Masuk</button>
+        <button class="tab"        id="jTabReg"   onclick="joinTab('register')">📝 Daftar</button>
+      </div>
+
+      <!-- Join: login -->
+      <div id="jPanelLogin">
+        <p style="font-size:13px;color:#666;margin-bottom:14px">
+          Log masuk untuk menyertai bilik ini.<br>
+          <em>Login to join this room.</em>
+        </p>
+        <div class="fg">
+          <label>📧 E-mel / Email</label>
+          <input type="email" id="jEmail" placeholder="nama@email.com">
+        </div>
+        <div class="fg">
+          <label>🔒 Kata Laluan / Password</label>
+          <input type="password" id="jPass" placeholder="••••••••"
+                 onkeypress="if(event.key==='Enter') doJoinLogin()">
+        </div>
+        <div class="fspin" id="spJLogin">
+          <div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:#7c4dff"></div>
+        </div>
+        <button class="btn btn-purple" onclick="doJoinLogin()">🚀 Log Masuk &amp; Sertai</button>
+        <button class="btn btn-gray"   onclick="showView('home')">← Laman Utama / Home</button>
+      </div>
+
+      <!-- Join: register -->
+      <div id="jPanelReg" class="hidden">
+        <div class="fg">
+          <label>👤 Nama Penuh</label>
+          <input type="text"     id="jrName"  placeholder="Nama penuh anda">
+        </div>
+        <div class="fg">
+          <label>📧 E-mel</label>
+          <input type="email"    id="jrEmail" placeholder="nama@email.com">
+        </div>
+        <div class="fg">
+          <label>🔒 Kata Laluan (min. 8 aksara)</label>
+          <input type="password" id="jrPass"  placeholder="••••••••">
+        </div>
+        <div class="fg">
+          <label>🔒 Sahkan Kata Laluan</label>
+          <input type="password" id="jrPass2" placeholder="••••••••">
+        </div>
+        <div class="fspin" id="spJReg">
+          <div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:#7c4dff"></div>
+        </div>
+        <button class="btn btn-purple" onclick="doJoinRegister()">✅ Daftar &amp; Sertai Bilik</button>
+        <button class="btn btn-gray"   onclick="showView('home')">← Laman Utama / Home</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     VIEW 4 — ROOM
+     ================================================================ -->
+<div id="viewRoom" class="view">
+
+  <!-- Room page loader -->
+  <div class="rm-loader" id="rmLoader">
+    <div class="spin" style="width:40px;height:40px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--blue)"></div>
+    <p id="rmLoaderMsg">Memuatkan bilik... / Loading room...</p>
+  </div>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <span class="logo">📹 VidChat</span>
+    <span class="room-idtag" id="rmTopId">🔑 Memuatkan...</span>
+    <span class="sbadge sb-idle" id="recBadge">⏸ Nota Berhenti</span>
+    <div class="tr">
+      <button class="sb sb-blue"   onclick="showRmInvite()">🔗 Jemput</button>
+      <button class="sb sb-purple" id="btnRec" onclick="toggleSpeech()">🎙️ Mula Nota</button>
+      <button class="sb sb-green"  onclick="showRmSave()">💾 Simpan PDF</button>
+      <button class="sb sb-red"    onclick="doLeave()">🚪 Keluar</button>
+    </div>
+  </div>
+
+  <!-- Main layout -->
+  <div class="rm-main">
+    <div class="video-area">
+      <div id="jitsiWrap">
+        <p style="color:#555;font-size:14px">Memuatkan video... / Loading video...</p>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="ptabs">
+        <button class="ptab active" onclick="rmPanel('Chat')">💬 Chat</button>
+        <button class="ptab"        onclick="rmPanel('Notes')">📝 Nota</button>
+        <button class="ptab"        onclick="rmPanel('Info')">ℹ️ Info</button>
+      </div>
+
+      <!-- Chat panel -->
+      <div class="pcontent active" id="rmPanelChat">
+        <div class="chat-msgs" id="chatMsgs">
+          <div class="cmsg other">
+            <div class="sndr">VidChat Bot</div>
+            👋 Selamat datang! Guna tab <strong>Nota</strong> untuk transkripsi.<br>
+            <em>Welcome! Use the Notes tab for transcription.</em>
+          </div>
+        </div>
+        <div class="chat-in">
+          <textarea class="chat-ta" id="chatInput" rows="2"
+            placeholder="Taip mesej... / Type message..."
+            onkeypress="handleChatKey(event)"></textarea>
+          <button class="sb sb-blue" onclick="sendChat()"
+            style="height:fit-content;align-self:flex-end;padding:10px 14px">➤</button>
+        </div>
+      </div>
+
+      <!-- Notes panel -->
+      <div class="pcontent" id="rmPanelNotes">
+        <div class="notes-body">
+          <div>
+            <div class="ntitle">🎙️ Transkrip Auto (BM + EN)</div>
+            <div style="margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap">
+              <button class="sb sb-purple" id="btnBM"  onclick="setLang('ms-MY')" style="font-size:11px">🇲🇾 BM</button>
+              <button class="sb sb-gray"   id="btnEN"  onclick="setLang('en-US')" style="font-size:11px">🇬🇧 EN</button>
+              <button class="sb sb-gray"   id="btnMix" onclick="setLang('mix')"   style="font-size:11px">🔀 BM+EN</button>
+            </div>
+            <div id="transcript" class="tarea">
+              Tekan "Mula Nota" untuk mulakan transkripsi...<br>
+              <em>Press "Mula Nota" to start transcription...</em>
+            </div>
+          </div>
+          <div>
+            <div class="ntitle">✍️ Nota Manual</div>
+            <textarea class="mnotes" id="manNotes"
+              placeholder="Tulis nota mesyuarat... / Write meeting notes...&#10;&#10;- Agenda: ...&#10;- Keputusan / Decision: ...&#10;- Tindakan / Action: ..."></textarea>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="sb sb-gray"  onclick="clearTx()"   style="flex:1;padding:9px">🗑️ Kosong</button>
+            <button class="sb sb-green" onclick="showRmSave()" style="flex:1;padding:9px">💾 Simpan PDF</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info panel -->
+      <div class="pcontent" id="rmPanelInfo">
+        <div style="padding:16px;font-size:13px;color:#ccc;line-height:1.9">
+          <div id="rmInfo">Memuatkan... / Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Room: Invite modal -->
+  <div class="dmodal-bg" id="rmInviteModal">
+    <div class="dmodal-box">
+      <h3>🔗 Pautan Jemputan / Invite Link</h3>
+      <p style="font-size:13px;color:#adb5bd;margin-bottom:8px">
+        Kongsi pautan ini dengan peserta lain:<br>
+        <em>Share this link with participants:</em>
+      </p>
+      <div class="dinv-box" id="rmInviteLink"></div>
+      <div style="display:flex;gap:8px">
+        <button class="sb sb-blue" onclick="rmCopyInvite()" style="flex:1;padding:10px">📋 Salin</button>
+        <button class="sb sb-gray" onclick="closeDModal('rmInviteModal')" style="flex:1;padding:10px">✕ Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Room: Save notes modal -->
+  <div class="dmodal-bg" id="rmSaveModal">
+    <div class="dmodal-box">
+      <h3>💾 Simpan Nota sebagai PDF</h3>
+      <p style="font-size:13px;color:#adb5bd;margin-bottom:12px">
+        Nota akan disimpan ke Google Drive dan dilog dalam Sheets.<br>
+        <em>Notes will be saved to Drive and logged in Sheets.</em>
+      </p>
+      <div id="saveStatus" style="font-size:13px;color:#adb5bd;min-height:36px"></div>
+      <div id="pdfLinkBox" class="res-link" style="display:none"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="sb sb-green" id="btnSaveNow" onclick="doSaveNotes()" style="flex:1;padding:10px">✅ Simpan Sekarang</button>
+        <button class="sb sb-gray"  onclick="closeDModal('rmSaveModal')"   style="flex:1;padding:10px">✕ Tutup</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end #viewRoom -->
+
+<!-- Jitsi Meet API (loaded once, used only in room view) -->
+<script src="https://meet.jit.si/external_api.js"></script>
+
+<script>
+// ================================================================
+//  GLOBAL STATE
+// ================================================================
+var SESSION     = JSON.parse(localStorage.getItem('vidchat_session') || 'null');
+var APP_URL     = '';
+var activeView  = '';
+
+// Room state
+var ROOM_ID       = '';
+var jitsiApi      = null;
+var recognition   = null;
+var isRecording   = false;
+var fullTx        = '';
+var currentLang   = 'ms-MY';
+var roomInviteUrl = '';
+
+// ================================================================
+//  BOOT — get web app URL then route
+// ================================================================
+window.onload = function() {
+  showPgLoader('Memuatkan... / Loading...');
+  google.script.run
+    .withSuccessHandler(function(url) {
+      APP_URL = url;
+      hidePgLoader();
+      routeTo(INITIAL_PAGE, INITIAL_ROOM_ID);
+    })
+    .withFailureHandler(function(e) {
+      hidePgLoader();
+      // Fallback: just show home view
+      routeTo('home', '');
+      showToast('⚠️ Ralat sambungan: ' + e.message);
+    })
+    .getWebAppUrl();
+};
+
+// ================================================================
+//  CLIENT-SIDE ROUTER
+// ================================================================
+function routeTo(page, roomId) {
+  // Decide which view to show
+  if (page === 'room' && roomId) {
+    if (!SESSION) {
+      // Not logged in — show join page instead
+      ROOM_ID = roomId;
+      showView('join');
+    } else {
+      ROOM_ID = roomId;
+      showView('room');
+      initRoom();
+    }
+  } else if (page === 'join' && roomId) {
+    ROOM_ID = roomId;
+    showView('join');
+    document.getElementById('joinRoomBadge').textContent = '🔑 Room: ' + roomId;
+    // Already logged in? Skip straight to room
+    if (SESSION) {
+      showPgLoader('Mengesahkan sesi... / Validating...');
+      joinRoomServer(SESSION.email, SESSION.token);
+    }
+  } else if (page === 'register') {
+    showView('register');
+  } else {
+    // Default: home
+    showView('home');
+    if (SESSION) showCreatePanel();
+  }
+}
+
+function showView(name) {
+  var ids = ['viewHome','viewRegister','viewJoin','viewRoom'];
+  ids.forEach(function(id) {
+    document.getElementById(id).classList.remove('active');
+  });
+  var map = { home:'viewHome', register:'viewRegister', join:'viewJoin', room:'viewRoom' };
+  var el  = document.getElementById(map[name]);
+  if (el) el.classList.add('active');
+  activeView = name;
+
+  // Update browser URL bar without reloading (purely cosmetic)
+  try {
+    var params = '?page=' + name + (ROOM_ID ? '&room=' + ROOM_ID : '');
+    history.replaceState({}, '', APP_URL + params);
+  } catch(e) {}
+}
+
+// ================================================================
+//  NAVIGATION HELPERS
+// ================================================================
+function showPgLoader(msg) {
+  document.getElementById('pgLoaderMsg').textContent = msg || 'Memuatkan...';
+  document.getElementById('pgLoader').classList.add('show');
+}
+function hidePgLoader() {
+  document.getElementById('pgLoader').classList.remove('show');
+}
+
+// ================================================================
+//  HOME VIEW
+// ================================================================
+function homeTab(tab) {
+  var isLogin = (tab === 'login');
+  document.getElementById('hTabLogin').classList.toggle('active', isLogin);
+  document.getElementById('hTabCreate').classList.toggle('active', !isLogin);
+  document.getElementById('hPanelLogin').classList.toggle('hidden', !isLogin);
+  if (!isLogin && !SESSION) {
+    // Not logged in — bounce back
+    document.getElementById('hTabLogin').classList.add('active');
+    document.getElementById('hTabCreate').classList.remove('active');
+    document.getElementById('hPanelLogin').classList.remove('hidden');
+    showAlert('homeAlert','⚠️ Sila log masuk dahulu / Please login first.','error');
+    return;
+  }
+  document.getElementById('hPanelCreate').classList.toggle('hidden', isLogin);
+  clearAlert('homeAlert');
+}
+
+function doLogin() {
+  var email = val('loginEmail');
+  var pass  = val('loginPass');
+  if (!email || !pass) { showAlert('homeAlert','⚠️ Sila isi semua medan.','error'); return; }
+  showFspin('spLogin');
+  google.script.run
+    .withSuccessHandler(function(r) {
+      hideFspin('spLogin');
+      if (r.success) {
+        SESSION = { token:r.token, name:r.name, email:r.email };
+        localStorage.setItem('vidchat_session', JSON.stringify(SESSION));
+        showAlert('homeAlert','✅ Log masuk berjaya!','success');
+        setTimeout(showCreatePanel, 600);
+      } else {
+        showAlert('homeAlert', r.message, 'error');
+      }
+    })
+    .withFailureHandler(function(e) {
+      hideFspin('spLogin');
+      showAlert('homeAlert','Ralat: ' + e.message,'error');
+    })
+    .loginUser(email, pass);
+}
+
+function showCreatePanel() {
+  document.getElementById('hPanelLogin').classList.add('hidden');
+  document.getElementById('hPanelCreate').classList.remove('hidden');
+  document.getElementById('hTabLogin').classList.remove('active');
+  document.getElementById('hTabCreate').classList.add('active');
+  document.getElementById('homeGreeting').innerHTML =
+    '👋 Selamat datang, <strong>' + esc(SESSION.name) + '</strong>! (' + esc(SESSION.email) + ')';
+  clearAlert('homeAlert');
+}
+
+function doCreateRoom() {
+  var name = val('roomName');
+  if (!name) { showAlert('homeAlert','⚠️ Sila masukkan nama bilik.','error'); return; }
+  showFspin('spRoom');
+  google.script.run
+    .withSuccessHandler(function(r) {
+      hideFspin('spRoom');
+      if (r.success) {
+        document.getElementById('homeInviteLink').textContent = r.inviteLink;
+        // Store room id for proceeding
+        ROOM_ID = r.roomId;
+        document.getElementById('inviteModal').classList.add('show');
+      } else {
+        showAlert('homeAlert', r.message, 'error');
+      }
+    })
+    .withFailureHandler(function(e) {
+      hideFspin('spRoom');
+      showAlert('homeAlert','Ralat: ' + e.message,'error');
+    })
+    .createRoom(SESSION.email, SESSION.token, name);
+}
+
+function homeCopyLink() {
+  var link = document.getElementById('homeInviteLink').textContent;
+  navigator.clipboard.writeText(link).then(function() {
+    showToast('✅ Pautan disalin! / Link copied!');
+  });
+}
+
+function homeProceedToRoom() {
+  document.getElementById('inviteModal').classList.remove('show');
+  showView('room');
+  initRoom();
+}
+
+function doLogout() {
+  localStorage.removeItem('vidchat_session');
+  SESSION = null;
+  ROOM_ID = '';
+  // Reset home panel
+  document.getElementById('hPanelCreate').classList.add('hidden');
+  document.getElementById('hPanelLogin').classList.remove('hidden');
+  document.getElementById('hTabLogin').classList.add('active');
+  document.getElementById('hTabCreate').classList.remove('active');
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPass').value  = '';
+  clearAlert('homeAlert');
+  showToast('👋 Log keluar berjaya. / Logged out.');
+}
+
+// ================================================================
+//  REGISTER VIEW
+// ================================================================
+function checkStrength(pass) {
+  var bar   = document.getElementById('strBar');
+  var text  = document.getElementById('strText');
+  var score = 0;
+  if (pass.length >= 8)          score++;
+  if (/[A-Z]/.test(pass))        score++;
+  if (/[0-9]/.test(pass))        score++;
+  if (/[^A-Za-z0-9]/.test(pass)) score++;
+  var pct    = score * 25;
+  var colors = ['#ea4335','#ea4335','#fbbc05','#34a853','#34a853'];
+  var labels = ['','Lemah/Weak','Sederhana/Medium','Kuat/Strong','Sangat Kuat/Very Strong'];
+  bar.style.width      = pct + '%';
+  bar.style.background = colors[score];
+  text.textContent     = score > 0 ? labels[score] : 'Sekurang-kurangnya 8 aksara / At least 8 characters';
+}
+
+function doRegister() {
+  var name  = val('regName');
+  var email = val('regEmail');
+  var pass  = val('regPass');
+  var pass2 = val('regPass2');
+  clearAlert('regAlert');
+  if (!name||!email||!pass||!pass2) {
+    showAlert('regAlert','⚠️ Sila isi semua medan. / Please fill all fields.','error'); return; }
+  if (pass.length < 8) {
+    showAlert('regAlert','⚠️ Kata laluan min. 8 aksara.','error'); return; }
+  if (pass !== pass2) {
+    showAlert('regAlert','⚠️ Kata laluan tidak sepadan. / Passwords do not match.','error'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showAlert('regAlert','⚠️ Format e-mel tidak sah. / Invalid email format.','error'); return; }
+  showFspin('spReg');
+  google.script.run
+    .withSuccessHandler(function(r) {
+      hideFspin('spReg');
+      if (r.success) {
+        showAlert('regAlert', r.message, 'success');
+        setTimeout(function() { showView('home'); }, 1800);
+      } else {
+        showAlert('regAlert', r.message, 'error');
+      }
+    })
+    .withFailureHandler(function(e) {
+      hideFspin('spReg');
+      showAlert('regAlert','Ralat: ' + e.message,'error');
+    })
+    .registerUser(name, email, pass);
+}
+
+// ================================================================
+//  JOIN VIEW
+// ================================================================
+function joinTab(tab) {
+  var isLogin = (tab === 'login');
+  document.getElementById('jTabLogin').classList.toggle('active',  isLogin);
+  document.getElementById('jTabReg').classList.toggle('active',   !isLogin);
+  document.getElementById('jPanelLogin').classList.toggle('hidden',!isLogin);
+  document.getElementById('jPanelReg').classList.toggle('hidden',   isLogin);
+  clearAlert('joinAlert');
+}
+
+function doJoinLogin() {
+  var email = val('jEmail');
+  var pass  = val('jPass');
+  if (!email||!pass) { showAlert('joinAlert','⚠️ Sila isi semua medan.','error'); return; }
+  showFspin('spJLogin');
+  google.script.run
+    .withSuccessHandler(function(r) {
+      hideFspin('spJLogin');
+      if (r.success) {
+        SESSION = { token:r.token, name:r.name, email:r.email };
+        localStorage.setItem('vidchat_session', JSON.stringify(SESSION));
+        showPgLoader('Mengesahkan bilik... / Validating room...');
+        joinRoomServer(r.email, r.token);
+      } else {
+        showAlert('joinAlert', r.message, 'error');
+      }
+    })
+    .withFailureHandler(function(e) {
+      hideFspin('spJLogin');
+      showAlert('joinAlert','Ralat: ' + e.message,'error');
+    })
+    .loginUser(email, pass);
+}
+
+function doJoinRegister() {
+  var name  = val('jrName');
+  var email = val('jrEmail');
+  var pass  = val('jrPass');
+  var pass2 = val('jrPass2');
+  if (!name||!email||!pass||!pass2) {
+    showAlert('joinAlert','⚠️ Sila isi semua medan.','error'); return; }
+  if (pass !== pass2) {
+    showAlert('joinAlert','⚠️ Kata laluan tidak sepadan.','error'); return; }
+  if (pass.length < 8) {
+    showAlert('joinAlert','⚠️ Kata laluan min. 8 aksara.','error'); return; }
+  showFspin('spJReg');
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (r.success) {
+        // Auto login after register
+        google.script.run
+          .withSuccessHandler(function(lr) {
+            hideFspin('spJReg');
+            if (lr.success) {
+              SESSION = { token:lr.token, name:lr.name, email:lr.email };
+              localStorage.setItem('vidchat_session', JSON.stringify(SESSION));
+              showPgLoader('Mengesahkan bilik... / Validating room...');
+              joinRoomServer(lr.email, lr.token);
+            } else {
+              showAlert('joinAlert', lr.message, 'error');
+            }
+          })
+          .withFailureHandler(function(e) {
+            hideFspin('spJReg');
+            showAlert('joinAlert','Ralat: ' + e.message,'error');
+          })
+          .loginUser(email, pass);
+      } else {
+        hideFspin('spJReg');
+        showAlert('joinAlert', r.message, 'error');
+      }
+    })
+    .withFailureHandler(function(e) {
+      hideFspin('spJReg');
+      showAlert('joinAlert','Ralat: ' + e.message,'error');
+    })
+    .registerUser(name, email, pass);
+}
+
+function joinRoomServer(email, token) {
+  google.script.run
+    .withSuccessHandler(function(r) {
+      hidePgLoader();
+      if (r.success) {
+        ROOM_ID = r.roomId;
+        showView('room');
+        initRoom();
+      } else {
+        showAlert('joinAlert', r.message, 'error');
+        localStorage.removeItem('vidchat_session');
+        SESSION = null;
+      }
+    })
+    .withFailureHandler(function(e) {
+      hidePgLoader();
+      showAlert('joinAlert','Ralat: ' + e.message,'error');
+    })
+    .validateAndJoinRoom(email, token, ROOM_ID);
+}
+
+// ================================================================
+//  ROOM VIEW — INIT
+// ================================================================
+function initRoom() {
+  if (!SESSION || !ROOM_ID) { showView('home'); return; }
+  roomInviteUrl = APP_URL + '?page=join&room=' + ROOM_ID;
+  document.getElementById('rmInviteLink').textContent = roomInviteUrl;
+  loadRoomInfo();
+  initJitsi();
+  initSpeech();
+}
+
+function loadRoomInfo() {
+  google.script.run
+    .withSuccessHandler(function(info) {
+      var name = (info && info.roomName) ? info.roomName : ROOM_ID;
+      document.getElementById('rmTopId').textContent = '🔑 ' + name + ' (' + ROOM_ID + ')';
+      document.getElementById('rmInfo').innerHTML =
+        '<strong style="color:#fff">📋 Maklumat Bilik / Room Info</strong><br><br>' +
+        '<span style="color:#adb5bd">Nama / Name:</span> <strong>' + esc(name) + '</strong><br>' +
+        '<span style="color:#adb5bd">Room ID:</span> <code style="color:#81c784">' + esc(ROOM_ID) + '</code><br>' +
+        '<span style="color:#adb5bd">Pengguna / User:</span> <strong>' + esc(SESSION.name) + '</strong><br>' +
+        '<span style="color:#adb5bd">E-mel / Email:</span> ' + esc(SESSION.email) + '<br><br>' +
+        '<span style="color:#adb5bd">🎙️ Bahasa Transkripsi:</span><br>' +
+        'Bahasa Melayu (ms-MY) + English (en-US)<br><br>' +
+        '<span style="color:#adb5bd">💾 Fail disimpan ke / Files saved to:</span><br>' +
+        'Google Drive (PDF Notes)';
+    })
+    .withFailureHandler(function() {
+      document.getElementById('rmTopId').textContent = '🔑 ' + ROOM_ID;
+    })
+    .getRoomInfo(ROOM_ID);
+}
+
+// ================================================================
+//  JITSI
+// ================================================================
+function initJitsi() {
+  var wrap = document.getElementById('jitsiWrap');
+  wrap.innerHTML = '';
+  try {
+    jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', {
+      roomName: 'vidchat-' + ROOM_ID.replace(/-/g,''),
+      width: '100%',
+      height: '100%',
+      parentNode: wrap,
+      userInfo: { displayName: SESSION.name, email: SESSION.email },
+      configOverwrite: {
+        startWithAudioMuted : false,
+        startWithVideoMuted : false,
+        enableWelcomePage   : false,
+        disableDeepLinking  : true,
+        prejoinPageEnabled  : false,
+        toolbarButtons: [
+          'microphone','camera','closedcaptions','desktop','fullscreen',
+          'fodeviceselection','hangup','profile','raisehand','settings',
+          'videoquality','filmstrip','shortcuts','tileview','select-background'
+        ]
+      },
+      interfaceConfigOverwrite: {
+        SHOW_JITSI_WATERMARK      : false,
+        SHOW_WATERMARK_FOR_GUESTS : false,
+        TOOLBAR_ALWAYS_VISIBLE    : true
+      }
+    });
+    jitsiApi.addEventListener('videoConferenceLeft', function() { doLeave(); });
+  } catch(e) {
+    wrap.innerHTML =
+      '<p style="color:#ff6b6b;padding:20px;text-align:center">' +
+      '⚠️ Ralat memuatkan video:<br>' + esc(e.message) + '</p>';
+  }
+}
+
+// ================================================================
+//  SPEECH RECOGNITION
+// ================================================================
+function initSpeech() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    document.getElementById('btnRec').style.opacity = '0.5';
+    document.getElementById('btnRec').title = 'Sila guna Google Chrome / Please use Chrome';
+    return;
+  }
+  recognition = new SR();
+  recognition.continuous     = true;
+  recognition.interimResults = true;
+
+  recognition.onresult = function(e) {
+    var interim = '';
+    for (var i = e.resultIndex; i < e.results.length; i++) {
+      var txt = e.results[i][0].transcript;
+      if (e.results[i].isFinal) {
+        var ts = new Date().toLocaleTimeString('ms-MY');
+        fullTx += '[' + ts + '] ' + txt.trim() + '\n';
+        updateTx();
+      } else {
+        interim += txt;
+      }
+    }
+    var el = document.getElementById('transcript');
+    el.innerHTML = fullTx.replace(/\n/g,'<br>') +
+      (interim ? '<span style="color:#6c757d;font-style:italic">' + esc(interim) + '</span>' : '');
+    el.scrollTop = el.scrollHeight;
+  };
+
+  recognition.onerror = function(e) {
+    if (e.error !== 'no-speech' && e.error !== 'aborted') showToast('🎙️ Mic error: ' + e.error);
+    if (isRecording && e.error !== 'aborted') setTimeout(startRec, 500);
+  };
+
+  recognition.onend = function() {
+    if (isRecording) setTimeout(startRec, 200);
+  };
+}
+
+function startRec() {
+  if (!recognition) return;
+  recognition.lang = (currentLang === 'mix') ? 'ms-MY' : currentLang;
+  try { recognition.start(); } catch(e) {}
+}
+
+function stopRec() {
+  if (recognition) { try { recognition.stop(); } catch(e) {} }
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  document.getElementById('btnBM').className  = 'sb sb-gray';
+  document.getElementById('btnEN').className  = 'sb sb-gray';
+  document.getElementById('btnMix').className = 'sb sb-gray';
+  var map = {'ms-MY':'btnBM','en-US':'btnEN','mix':'btnMix'};
+  if (map[lang]) document.getElementById(map[lang]).className = 'sb sb-purple';
+  if (isRecording) { stopRec(); setTimeout(startRec, 300); }
+  showToast('🌐 ' + (lang==='ms-MY'?'Bahasa Melayu':lang==='en-US'?'English':'BM+EN Mix'));
+}
+
+function toggleSpeech() {
+  if (!recognition) { showToast('⚠️ Sila guna Google Chrome.'); return; }
+  isRecording = !isRecording;
+  var btn   = document.getElementById('btnRec');
+  var badge = document.getElementById('recBadge');
+  if (isRecording) {
+    startRec();
+    btn.textContent = '⏹ Henti Nota';
+    btn.className   = 'sb sb-red';
+    badge.className = 'sbadge sb-rec';
+    badge.innerHTML = '<div class="pulse"></div> Merakam Nota';
+    showToast('🎙️ Transkripsi dimulakan / Started');
+  } else {
+    stopRec();
+    btn.textContent = '🎙️ Mula Nota';
+    btn.className   = 'sb sb-purple';
+    badge.className = 'sbadge sb-idle';
+    badge.textContent = '⏸ Nota Berhenti';
+    showToast('⏹ Transkripsi dihentikan / Stopped');
+  }
+}
+
+function updateTx() {
+  var el = document.getElementById('transcript');
+  el.innerHTML = fullTx.replace(/\n/g,'<br>');
+  el.scrollTop = el.scrollHeight;
+}
+
+function clearTx() {
+  if (confirm('Padam semua transkrip? / Delete all transcript?')) {
+    fullTx = '';
+    document.getElementById('transcript').innerHTML =
+      '<em style="color:#666">Transkrip dikosongkan. / Cleared.</em>';
+  }
+}
+
+// ================================================================
+//  CHAT
+// ================================================================
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function sendChat() {
+  var input = document.getElementById('chatInput');
+  var msg   = input.value.trim();
+  if (!msg) return;
+  addMsg(SESSION.name, msg, 'me');
+  input.value = '';
+  if (jitsiApi) { try { jitsiApi.executeCommand('sendChatMessage', msg); } catch(e) {} }
+}
+
+function addMsg(sender, text, type) {
+  var c   = document.getElementById('chatMsgs');
+  var div = document.createElement('div');
+  div.className = 'cmsg ' + type;
+  div.innerHTML = '<div class="sndr">' + esc(sender) + '</div>' + esc(text);
+  c.appendChild(div);
+  c.scrollTop = c.scrollHeight;
+}
+
+// ================================================================
+//  ROOM PANELS
+// ================================================================
+function rmPanel(name) {
+  var names = ['Chat','Notes','Info'];
+  document.querySelectorAll('.ptab').forEach(function(t, i) {
+    t.classList.toggle('active', names[i] === name);
+  });
+  ['Chat','Notes','Info'].forEach(function(n) {
+    var el = document.getElementById('rmPanel' + n);
+    if (el) el.classList.toggle('active', n === name);
+  });
+}
+
+// ================================================================
+//  ROOM INVITE
+// ================================================================
+function showRmInvite() {
+  document.getElementById('rmInviteModal').classList.add('show');
+}
+function rmCopyInvite() {
+  navigator.clipboard.writeText(roomInviteUrl).then(function() {
+    showToast('✅ Pautan disalin! / Link copied!');
+    closeDModal('rmInviteModal');
+  });
+}
+
+// ================================================================
+//  SAVE NOTES / PDF
+// ================================================================
+function showRmSave() {
+  document.getElementById('saveStatus').textContent =
+    'Sedia untuk menyimpan... / Ready to save...';
+  document.getElementById('pdfLinkBox').style.display = 'none';
+  document.getElementById('btnSaveNow').disabled = false;
+  document.getElementById('rmSaveModal').classList.add('show');
+}
+
+function doSaveNotes() {
+  var manual = document.getElementById('manNotes').value;
+  var tx     = fullTx;
+  if (!manual.trim() && !tx.trim()) {
+    showToast('⚠️ Tiada nota atau transkrip untuk disimpan.'); return;
+  }
+  document.getElementById('saveStatus').textContent = '⏳ Menyimpan... Sila tunggu...';
+  document.getElementById('btnSaveNow').disabled = true;
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (r.success) {
+        document.getElementById('saveStatus').innerHTML =
+          '✅ <strong style="color:#81c784">Nota berjaya disimpan sebagai PDF!</strong>';
+        if (r.pdfLink) {
+          var box = document.getElementById('pdfLinkBox');
+          box.style.display = 'block';
+          box.innerHTML = '📄 <a href="' + r.pdfLink + '" target="_blank" ' +
+            'style="color:#81c784;word-break:break-all">' + r.pdfLink + '</a>';
+        }
+        showToast('✅ PDF disimpan ke Drive!');
+      } else {
+        document.getElementById('saveStatus').textContent = '❌ ' + r.message;
+        document.getElementById('btnSaveNow').disabled = false;
+      }
+    })
+    .withFailureHandler(function(e) {
+      document.getElementById('saveStatus').textContent = '❌ Ralat: ' + e.message;
+      document.getElementById('btnSaveNow').disabled = false;
+    })
+    .saveNotes(SESSION.email, SESSION.token, ROOM_ID, manual, tx);
+}
+
+// ================================================================
+//  LEAVE ROOM
+// ================================================================
+function doLeave() {
+  isRecording = false;
+  stopRec();
+  if (jitsiApi) { try { jitsiApi.dispose(); } catch(e) {} jitsiApi = null; }
+  fullTx  = '';
+  ROOM_ID = '';
+
+  google.script.run
+    .withSuccessHandler(function() {})
+    .withFailureHandler(function() {})
+    .leaveRoom(SESSION ? SESSION.email : '', SESSION ? SESSION.token : '', ROOM_ID);
+
+  // Go back to home (create room panel)
+  showView('home');
+  if (SESSION) showCreatePanel();
+  showToast('👋 Anda telah keluar dari bilik. / You have left the room.');
+}
+
+// ================================================================
+//  MODAL HELPERS
+// ================================================================
+function closeDModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// ================================================================
+//  SHARED UTILITIES
+// ================================================================
+function showAlert(alertId, msg, type) {
+  var el = document.getElementById(alertId);
+  if (!el) return;
+  el.className     = 'alert alert-' + type;
+  el.textContent   = msg;
+  el.style.display = 'block';
+}
+function clearAlert(alertId) {
+  var el = document.getElementById(alertId);
+  if (el) el.style.display = 'none';
+}
+function showFspin(id) {
+  var el = document.getElementById(id);
+  if (el) el.style.display = 'block';
+}
+function hideFspin(id) {
+  var el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+function val(id) {
+  var el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3200);
+}
+</script>
+</body>
+</html>
