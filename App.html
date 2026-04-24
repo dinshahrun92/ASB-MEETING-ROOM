@@ -276,6 +276,9 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
       <button class="btn btn-green" onclick="homeProceedToRoom()" style="margin-top:8px">
         🚀 Masuk Bilik Sekarang / Enter Room
       </button>
+      <button class="btn btn-gray"  onclick="document.getElementById('inviteModal').classList.remove('show')" style="margin-top:8px">
+        ✕ Tutup / Close
+      </button>
     </div>
   </div>
 </div>
@@ -989,6 +992,8 @@ function initJitsi() {
         enableWelcomePage   : false,
         disableDeepLinking  : true,
         prejoinPageEnabled  : false,
+        enableLobbyChat     : false,
+        hideLobbyButton     : true,
         toolbarButtons: [
           'microphone','camera','closedcaptions','desktop','fullscreen',
           'fodeviceselection','hangup','profile','raisehand','settings',
