@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VidChat</title>
+<title>AxiCom Meeting Room</title>
 <style>
 :root{--blue:#1a73e8;--dark:#0d47a1;--green:#34a853;--red:#ea4335;--purple:#7c4dff;
       --bg:#f0f4f8;--room-bg:#1a1a2e;--room-panel:#16213e;--room-card:#0f3460}
@@ -165,6 +165,10 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
           border-radius:8px;padding:12px;font-size:12px;word-break:break-all;
           color:#81c784;margin:10px 0}
 
+.ai-sum-box{background:#0d2137;border:1px solid rgba(124,77,255,.4);border-radius:8px;
+            padding:14px;font-size:13px;color:#ccc;line-height:1.8;
+            white-space:pre-wrap;max-height:260px;overflow-y:auto;display:none}
+
 /* Room loader */
 .rm-loader{display:none;position:fixed;inset:0;background:rgba(26,26,46,.92);
            z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
@@ -202,8 +206,8 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
 <div id="viewHome" class="view auth-screen">
   <div class="card">
     <div class="card-header" style="background:linear-gradient(135deg,#1a73e8,#0d47a1)">
-      <div class="logo">📹</div>
-      <h1>VidChat</h1>
+      <div class="logo">🖥️</div>
+      <h1>AxiCom Meeting Room</h1>
       <p>Video Call · Chat · Nota Automatik</p>
     </div>
     <div class="card-body">
@@ -284,7 +288,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
     <div class="card-header" style="background:linear-gradient(135deg,#34a853,#1e6e3e)">
       <div class="logo">📝</div>
       <h1>Daftar Akaun / Register</h1>
-      <p>VidChat — Sila daftar untuk menggunakan perkhidmatan</p>
+      <p>AxiCom Meeting Room — Sila daftar untuk menggunakan perkhidmatan</p>
     </div>
     <div class="card-body">
       <div id="regAlert" class="alert"></div>
@@ -327,20 +331,39 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
 <div id="viewJoin" class="view auth-screen">
   <div class="card">
     <div class="card-header" style="background:linear-gradient(135deg,#7c4dff,#3d1a8c)">
-      <div class="logo">📹</div>
-      <h2>Jemputan VidChat / Invite</h2>
+      <div class="logo">🖥️</div>
+      <h2>Jemputan AxiCom / Invite</h2>
       <div class="room-badge" id="joinRoomBadge">🔑 Room: ...</div>
     </div>
     <div class="card-body">
       <div id="joinAlert" class="alert"></div>
 
       <div class="tabs">
+        <button class="tab" id="jTabGuest" onclick="joinTab('guest')">👤 Tetamu/Guest</button>
         <button class="tab active" id="jTabLogin" onclick="joinTab('login')">🔑 Log Masuk</button>
         <button class="tab"        id="jTabReg"   onclick="joinTab('register')">📝 Daftar</button>
       </div>
 
+      <!-- Join: guest (name only) -->
+      <div id="jPanelGuest" class="hidden">
+        <p style="font-size:13px;color:#666;margin-bottom:14px">
+          Masuk sebagai tetamu — hanya perlu nama anda.<br>
+          <em>Join as a guest — just enter your name.</em>
+        </p>
+        <div class="fg">
+          <label>👤 Nama Anda / Your Name</label>
+          <input type="text" id="jGuestName" placeholder="cth: Ahmad bin Ali"
+                 onkeypress="if(event.key==='Enter') doGuestJoin()">
+        </div>
+        <div class="fspin" id="spJGuest">
+          <div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:#7c4dff"></div>
+        </div>
+        <button class="btn btn-purple" onclick="doGuestJoin()">🚀 Masuk sebagai Tetamu / Join as Guest</button>
+        <button class="btn btn-gray"   onclick="showView('home')">← Laman Utama / Home</button>
+      </div>
+
       <!-- Join: login -->
-      <div id="jPanelLogin">
+      <div id="jPanelLogin" class="hidden">
         <p style="font-size:13px;color:#666;margin-bottom:14px">
           Log masuk untuk menyertai bilik ini.<br>
           <em>Login to join this room.</em>
@@ -402,7 +425,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
 
   <!-- Top bar -->
   <div class="topbar">
-    <span class="logo">📹 VidChat</span>
+    <span class="logo">🖥️ AxiCom Meeting Room</span>
     <span class="room-idtag" id="rmTopId">🔑 Memuatkan...</span>
     <span class="sbadge sb-idle" id="recBadge">⏸ Nota Berhenti</span>
     <div class="tr">
@@ -432,7 +455,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
       <div class="pcontent active" id="rmPanelChat">
         <div class="chat-msgs" id="chatMsgs">
           <div class="cmsg other">
-            <div class="sndr">VidChat Bot</div>
+            <div class="sndr">AxiCom Bot</div>
             👋 Selamat datang! Guna tab <strong>Nota</strong> untuk transkripsi.<br>
             <em>Welcome! Use the Notes tab for transcription.</em>
           </div>
@@ -466,9 +489,17 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
             <textarea class="mnotes" id="manNotes"
               placeholder="Tulis nota mesyuarat... / Write meeting notes...&#10;&#10;- Agenda: ...&#10;- Keputusan / Decision: ...&#10;- Tindakan / Action: ..."></textarea>
           </div>
+          <div>
+            <div class="ntitle">🤖 AI Ringkasan / AI Summary</div>
+            <div id="aiSumBox" class="ai-sum-box"></div>
+            <div class="fspin" id="spAiSum">
+              <div class="spin" style="width:22px;height:22px;border:3px solid rgba(255,255,255,.2);border-top-color:#7c4dff"></div>
+            </div>
+          </div>
           <div style="display:flex;gap:6px">
-            <button class="sb sb-gray"  onclick="clearTx()"   style="flex:1;padding:9px">🗑️ Kosong</button>
-            <button class="sb sb-green" onclick="showRmSave()" style="flex:1;padding:9px">💾 Simpan PDF</button>
+            <button class="sb sb-gray"   onclick="clearTx()"    style="flex:1;padding:9px">🗑️ Kosong</button>
+            <button class="sb sb-purple" onclick="doAiSummary()" style="flex:1;padding:9px">🤖 AI Ringkasan</button>
+            <button class="sb sb-green"  onclick="showRmSave()"  style="flex:1;padding:9px">💾 PDF</button>
           </div>
         </div>
       </div>
@@ -576,6 +607,8 @@ function routeTo(page, roomId) {
     ROOM_ID = roomId;
     showView('join');
     document.getElementById('joinRoomBadge').textContent = '🔑 Room: ' + roomId;
+    // Show guest tab by default for invite link visitors
+    joinTab('guest');
     // Already logged in? Skip straight to room
     if (SESSION) {
       showPgLoader('Mengesahkan sesi... / Validating...');
@@ -778,13 +811,41 @@ function doRegister() {
 //  JOIN VIEW
 // ================================================================
 function joinTab(tab) {
-  var isLogin = (tab === 'login');
-  document.getElementById('jTabLogin').classList.toggle('active',  isLogin);
-  document.getElementById('jTabReg').classList.toggle('active',   !isLogin);
-  document.getElementById('jPanelLogin').classList.toggle('hidden',!isLogin);
-  document.getElementById('jPanelReg').classList.toggle('hidden',   isLogin);
+  var tabs   = ['guest','login','register'];
+  var panels = { guest:'jPanelGuest', login:'jPanelLogin', register:'jPanelReg' };
+  var tids   = { guest:'jTabGuest', login:'jTabLogin', register:'jTabReg' };
+  tabs.forEach(function(t) {
+    document.getElementById(tids[t]).classList.toggle('active', t === tab);
+    document.getElementById(panels[t]).classList.toggle('hidden', t !== tab);
+  });
   clearAlert('joinAlert');
 }
+
+function doGuestJoin() {
+  var name = val('jGuestName');
+  if (!name) { showAlert('joinAlert','⚠️ Sila masukkan nama anda. / Please enter your name.','error'); return; }
+  showFspin('spJGuest');
+  google.script.run
+    .withSuccessHandler(function(r) {
+      hideFspin('spJGuest');
+      hidePgLoader();
+      if (r.success) {
+        SESSION = { name: name, email: '', token: '', isGuest: true };
+        ROOM_ID = r.roomId;
+        showView('room');
+        initRoom();
+      } else {
+        showAlert('joinAlert', r.message, 'error');
+      }
+    })
+    .withFailureHandler(function(e) {
+      hideFspin('spJGuest');
+      hidePgLoader();
+      showAlert('joinAlert','Ralat: ' + e.message,'error');
+    })
+    .guestJoinRoom(name, ROOM_ID);
+}
+
 
 function doJoinLogin() {
   var email = val('jEmail');
@@ -887,7 +948,6 @@ function initRoom() {
   initJitsi();
   initSpeech();
 }
-
 function loadRoomInfo() {
   google.script.run
     .withSuccessHandler(function(info) {
@@ -1112,6 +1172,12 @@ function showRmSave() {
 }
 
 function doSaveNotes() {
+  if (SESSION && SESSION.isGuest) {
+    document.getElementById('saveStatus').textContent =
+      '⚠️ Tetamu tidak dapat menyimpan ke Drive. Sila daftar akaun untuk fungsi ini. / Guest users cannot save to Drive. Please register.';
+    document.getElementById('btnSaveNow').disabled = false;
+    return;
+  }
   var manual = document.getElementById('manNotes').value;
   var tx     = fullTx;
   if (!manual.trim() && !tx.trim()) {
@@ -1151,23 +1217,57 @@ function doLeave() {
   isRecording = false;
   stopRec();
   if (jitsiApi) { try { jitsiApi.dispose(); } catch(e) {} jitsiApi = null; }
-  fullTx  = '';
+  fullTx = '';
+
+  var leftRoom = ROOM_ID;
   ROOM_ID = '';
 
-  google.script.run
-    .withSuccessHandler(function() {})
-    .withFailureHandler(function() {})
-    .leaveRoom(SESSION ? SESSION.email : '', SESSION ? SESSION.token : '', ROOM_ID);
+  if (SESSION && !SESSION.isGuest) {
+    google.script.run
+      .withSuccessHandler(function() {})
+      .withFailureHandler(function() {})
+      .leaveRoom(SESSION.email, SESSION.token, leftRoom);
+  }
 
   // Go back to home (create room panel)
   showView('home');
-  if (SESSION) showCreatePanel();
+  if (SESSION && !SESSION.isGuest) showCreatePanel();
   showToast('👋 Anda telah keluar dari bilik. / You have left the room.');
 }
 
 // ================================================================
-//  MODAL HELPERS
+//  AI SUMMARY
 // ================================================================
+function doAiSummary() {
+  var manual = document.getElementById('manNotes').value.trim();
+  var tx     = fullTx.trim();
+  if (!manual && !tx) {
+    showToast('⚠️ Tiada nota atau transkrip untuk dirumuskan.'); return;
+  }
+  var box = document.getElementById('aiSumBox');
+  box.style.display = 'block';
+  box.textContent   = '⏳ AI sedang merumuskan mesyuarat... / AI is summarising the meeting...';
+  showFspin('spAiSum');
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      hideFspin('spAiSum');
+      if (r.success) {
+        box.textContent = r.summary;
+        showToast('✅ Ringkasan AI berjaya! / AI summary ready!');
+      } else {
+        box.textContent = r.message;
+        showToast('❌ ' + r.message);
+      }
+    })
+    .withFailureHandler(function(e) {
+      hideFspin('spAiSum');
+      box.textContent = '❌ Ralat: ' + e.message;
+    })
+    .generateAiSummary(manual, tx);
+}
+
+
 function closeDModal(id) {
   document.getElementById(id).classList.remove('show');
 }

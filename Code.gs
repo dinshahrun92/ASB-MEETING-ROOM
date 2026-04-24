@@ -1,5 +1,5 @@
 // ============================================================
-//  VidChat — Google Apps Script Backend
+//  AxiCom Meeting Room — Google Apps Script Backend
 // ============================================================
 const SPREADSHEET_ID = '1B2pYmLAqwsn_XrQCY9VB4Pd9Rf7qU4u3BjaVid2_xFM';
 const FOLDER_ID      = '1Xu2Wyexv128LK6oWAH3R_W94gNhC_XUL';
@@ -13,7 +13,7 @@ function doGet(e) {
     tmpl.initialPage   = page;
     tmpl.initialRoomId = roomId;
     return tmpl.evaluate()
-      .setTitle('VidChat — Video Call & Chat')
+      .setTitle('AxiCom Meeting Room')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   } catch(err) {
@@ -201,7 +201,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;padding:40px;color:#222;background:
 .badge{display:inline-block;background:#e8f5e9;color:#2e7d32;padding:2px 8px;border-radius:12px;font-size:12px;margin:2px}</style>
 </head><body>
 <div class="header"><h1>📋 Nota Mesyuarat / Meeting Notes</h1>
-<p style="opacity:.85;margin-top:4px">VidChat — Video Call & Chat</p>
+<p style="opacity:.85;margin-top:4px">AxiCom Meeting Room</p>
 <div class="meta-grid">
 <div class="meta-item"><strong>Bilik / Room:</strong> ${escapeHtml(roomName)}</div>
 <div class="meta-item"><strong>Room ID:</strong> ${escapeHtml(roomId)}</div>
@@ -213,7 +213,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;padding:40px;color:#222;background:
 <div class="section"><div class="section-title">🎙️ Transkrip Perbualan
 <span class="badge">Bahasa Melayu</span><span class="badge">English</span></div>
 <div class="transcript-box">${escapeHtml(transcript)||'<em style="color:#999">Tiada transkrip.</em>'}</div></div>
-<div class="footer">Dijana oleh VidChat • ${dateStr} • Bahasa Melayu & English</div>
+<div class="footer">Dijana oleh AxiCom Meeting Room • ${dateStr} • Bahasa Melayu & English</div>
 </body></html>`;
     const htmlFile = folder.createFile(Utilities.newBlob(html, 'text/html', fname + '.html'));
     const pdfFile  = folder.createFile(htmlFile.getAs('application/pdf').setName(fname + '.pdf'));
@@ -229,7 +229,60 @@ function escapeHtml(str) {
             .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-// ── LOGGING ───────────────────────────────────────────────────
+// ── GUEST JOIN ────────────────────────────────────────────────
+function guestJoinRoom(guestName, roomId) {
+  try {
+    guestName = (guestName || '').trim();
+    if (!guestName) return { success: false, message: '⚠️ Sila masukkan nama anda. / Please enter your name.' };
+    const sheet = getSpreadsheet().getSheetByName('Rooms');
+    if (!sheet) return { success: false, message: '⚠️ Bilik tidak dijumpai. / Room not found.' };
+    const data  = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === roomId && data[i][5] === 'Aktif') {
+        const guestIdentifier = 'guest:' + guestName;
+        logSession(roomId, guestIdentifier, 'MASUK');
+        logActivity('MASUK_BILIK', guestIdentifier, 'Tetamu masuk bilik: ' + data[i][1], roomId);
+        return { success: true, roomId, roomName: data[i][1] };
+      }
+    }
+    return { success: false, message: '⚠️ Bilik tidak wujud atau tidak aktif. / Room not found or inactive.' };
+  } catch(err) { return { success: false, message: 'Ralat: ' + err.message }; }
+}
+
+// ── AI SUMMARY ────────────────────────────────────────────────
+function generateAiSummary(notes, transcript) {
+  try {
+    const apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+    if (!apiKey) return { success: false, message: '⚠️ Kunci AI belum dikonfigurasi. Sila tetapkan GEMINI_API_KEY dalam Script Properties.' };
+    if (!notes.trim() && !transcript.trim())
+      return { success: false, message: '⚠️ Tiada nota atau transkrip untuk dirumuskan.' };
+    const prompt =
+      'You are a professional meeting assistant. Summarize the following meeting notes and transcript ' +
+      'in BOTH English and Bahasa Malaysia.\n\n' +
+      'Manual Notes:\n' + (notes || 'None') + '\n\n' +
+      'Transcript:\n' + (transcript || 'None') + '\n\n' +
+      'Provide a structured summary with:\n' +
+      '1. Executive Summary / Ringkasan Eksekutif\n' +
+      '2. Key Decisions / Keputusan Utama\n' +
+      '3. Action Items / Perkara Tindakan\n' +
+      '4. Next Steps / Langkah Seterusnya';
+    const resp = UrlFetchApp.fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey,
+      {
+        method: 'post',
+        contentType: 'application/json',
+        muteHttpExceptions: true,
+        payload: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      }
+    );
+    const json = JSON.parse(resp.getContentText());
+    if (json.error) return { success: false, message: '❌ AI error: ' + json.error.message };
+    const summary = json.candidates[0].content.parts[0].text;
+    return { success: true, summary };
+  } catch(err) { return { success: false, message: 'Ralat AI: ' + err.message }; }
+}
+
+
 function logActivity(action, email, description, roomId) {
   try {
     const sheet = getOrCreateSheet(getSpreadsheet(), 'Log Aktiviti',
