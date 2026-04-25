@@ -215,10 +215,29 @@ input:focus{border-color:rgba(79,142,247,.9);background:rgba(79,142,247,.12);
 .sb-gray{background:rgba(255,255,255,.12);color:rgba(255,255,255,.85)}
 .sb-gray:hover{background:rgba(255,255,255,.22)}
 
-/* Jitsi fills full screen below topbar */
-#jitsiWrap{position:absolute;top:52px;left:0;right:0;bottom:0;
-  background:#000;z-index:1;display:flex;align-items:center;justify-content:center}
-#jitsiWrap iframe{width:100%!important;height:100%!important}
+/* WebRTC video area — fills full screen below topbar */
+#videoArea{position:absolute;top:52px;left:0;right:0;bottom:0;
+  background:#050510;z-index:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* Remote video grid */
+#remoteVideos{flex:1;display:flex;flex-wrap:wrap;gap:8px;padding:8px;
+  align-items:center;justify-content:center;overflow-y:auto;min-height:0}
+.remote-vid-wrap{position:relative;background:#0a0a1a;border-radius:12px;
+  overflow:hidden;border:1px solid rgba(255,255,255,.1);
+  flex:1 1 300px;max-width:600px;min-height:200px;max-height:420px}
+.remote-vid-wrap video{width:100%;height:100%;object-fit:cover;display:block;
+  min-height:200px}
+.vid-label{position:absolute;bottom:8px;left:8px;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(4px);
+  color:#fff;padding:3px 10px;border-radius:6px;font-size:12px}
+.vid-no-peers{color:rgba(255,255,255,.3);font-size:14px;
+  text-align:center;padding:60px 24px;flex:1;
+  display:flex;align-items:center;justify-content:center}
+
+/* Local video — small PiP in bottom-right */
+#localVideo{position:absolute;bottom:16px;right:16px;width:200px;height:150px;
+  object-fit:cover;border-radius:12px;border:2px solid rgba(255,255,255,.25);
+  z-index:10;background:#111;transform:scaleX(-1)}
 
 /* Floating glass side panel */
 .side{position:absolute;top:52px;right:0;bottom:0;width:360px;
@@ -603,6 +622,8 @@ input:focus{border-color:rgba(79,142,247,.9);background:rgba(79,142,247,.12);
     <span class="room-idtag" id="rmTopId">🔑 ...</span>
     <span class="sbadge sb-idle" id="recBadge">⏸ Nota</span>
     <div class="tr">
+      <button class="sb sb-green"  id="btnMute" onclick="toggleMute()">🎤 Mute</button>
+      <button class="sb sb-green"  id="btnCam"  onclick="toggleCamera()">📷 Cam Off</button>
       <button class="sb sb-blue"   onclick="showRmInvite()">🔗 Jemput</button>
       <button class="sb sb-purple" id="btnRec" onclick="toggleSpeech()">🎙️ Nota</button>
       <button class="sb sb-green"  onclick="showRmSave()">💾 PDF</button>
@@ -611,9 +632,14 @@ input:focus{border-color:rgba(79,142,247,.9);background:rgba(79,142,247,.12);
     </div>
   </div>
 
-  <!-- Jitsi — fills full screen below topbar -->
-  <div id="jitsiWrap">
-    <p style="color:rgba(255,255,255,.35);font-size:14px">Memuatkan video... / Loading video...</p>
+  <!-- WebRTC video area — fills full screen below topbar -->
+  <div id="videoArea">
+    <div id="remoteVideos">
+      <div class="vid-no-peers" id="noPeersMsg">
+        🔗 Menunggu peserta lain... / Waiting for others to join...
+      </div>
+    </div>
+    <video id="localVideo" autoplay muted playsinline></video>
   </div>
 
   <!-- Floating glass side panel -->
@@ -720,8 +746,8 @@ input:focus{border-color:rgba(79,142,247,.9);background:rgba(79,142,247,.12);
 
 </div><!-- end #viewRoom -->
 
-<!-- Jitsi Meet API (loaded once, used only in room view) -->
-<script src="https://meet.jit.si/external_api.js"></script>
+<!-- PeerJS — WebRTC signalling (replaces Jitsi) -->
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
 // ================================================================
@@ -733,12 +759,18 @@ var activeView  = '';
 
 // Room state
 var ROOM_ID       = '';
-var jitsiApi      = null;
 var recognition   = null;
 var isRecording   = false;
 var fullTx        = '';
 var currentLang   = 'ms-MY';
 var roomInviteUrl = '';
+
+// WebRTC state
+var localStream  = null;
+var peer         = null;
+var myPeerId     = '';
+var activePeers  = {};   // peerId -> { call }
+var pollInterval = null;
 
 // ================================================================
 //  BOOT — get web app URL then route
@@ -1118,12 +1150,9 @@ function initRoom() {
   roomInviteUrl = APP_URL + '?page=join&room=' + ROOM_ID;
   document.getElementById('rmInviteLink').textContent = roomInviteUrl;
   initSpeech();
-  // Get room info first to obtain the unique jitsiRoom token
   google.script.run
     .withSuccessHandler(function(info) {
-      var name      = (info && info.roomName)  ? info.roomName  : ROOM_ID;
-      var jitsiRoom = (info && info.jitsiRoom) ? info.jitsiRoom
-                      : 'vidchat' + ROOM_ID.replace(/-/g,'');
+      var name = (info && info.roomName) ? info.roomName : ROOM_ID;
       document.getElementById('rmTopId').textContent = '🔑 ' + name + ' (' + ROOM_ID + ')';
       document.getElementById('rmInfo').innerHTML =
         '<strong style="color:#fff">📋 Maklumat Bilik / Room Info</strong><br><br>' +
@@ -1135,69 +1164,195 @@ function initRoom() {
         'Bahasa Melayu (ms-MY) + English (en-US)<br><br>' +
         '<span style="color:rgba(255,255,255,.6)">💾 Fail disimpan ke / Files saved to:</span><br>' +
         'Google Drive (PDF Notes)';
-      initJitsi(jitsiRoom);
+      initWebRTC(ROOM_ID);
     })
     .withFailureHandler(function() {
       document.getElementById('rmTopId').textContent = '🔑 ' + ROOM_ID;
-      initJitsi('vidchat' + ROOM_ID.replace(/-/g,''));
+      initWebRTC(ROOM_ID);
     })
     .getRoomInfo(ROOM_ID);
 }
 
 // ================================================================
-//  JITSI
+//  WEBRTC (PeerJS)
 // ================================================================
-function initJitsi(jitsiRoom) {
-  var wrap = document.getElementById('jitsiWrap');
-  wrap.innerHTML = '';
-  try {
-    jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', {
-      roomName: jitsiRoom,
-      width: '100%',
-      height: '100%',
-      parentNode: wrap,
-      userInfo: { displayName: SESSION.name, email: SESSION.email || '' },
-      configOverwrite: {
-        startWithAudioMuted : false,
-        startWithVideoMuted : false,
-        enableWelcomePage   : false,
-        disableDeepLinking  : true,
-        prejoinPageEnabled  : false,
-        requireDisplayName  : false,
-        disableLobby        : true,
-        lobby               : { enabled: false, autoKnock: false },
-        enableLobbyChat     : false,
-        hideLobbyButton     : true,
-        toolbarButtons: [
-          'microphone','camera','closedcaptions','desktop','fullscreen',
-          'fodeviceselection','hangup','profile','raisehand','settings',
-          'videoquality','filmstrip','shortcuts','tileview','select-background'
-        ]
-      },
-      interfaceConfigOverwrite: {
-        SHOW_JITSI_WATERMARK      : false,
-        SHOW_WATERMARK_FOR_GUESTS : false,
-        TOOLBAR_ALWAYS_VISIBLE    : true,
-        DISPLAY_WELCOME_FOOTER    : false
-      }
-    });
-    jitsiApi.addEventListener('videoConferenceLeft', function() { doLeave(); });
-    // Disable lobby as soon as the local user joins
-    jitsiApi.addEventListener('videoConferenceJoined', function() {
-      try { jitsiApi.executeCommand('toggleLobby', false); } catch(e) {}
-    });
-    // Re-disable lobby whenever this user is promoted to moderator
-    jitsiApi.addEventListener('participantRoleChanged', function(ev) {
-      if (ev && ev.role === 'moderator') {
-        try { jitsiApi.executeCommand('toggleLobby', false); } catch(e) {}
-      }
-    });
-  } catch(e) {
-    wrap.innerHTML =
+function initWebRTC(roomId) {
+  var area = document.getElementById('videoArea');
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    area.innerHTML =
       '<div style="color:#ff8a80;padding:24px;text-align:center;' +
       'background:rgba(255,95,95,.1);margin:20px;border-radius:12px;' +
       'border:1px solid rgba(255,95,95,.3)">' +
-      '⚠️ Ralat memuatkan video:<br><small>' + esc(e.message) + '</small></div>';
+      '⚠️ Pelayar ini tidak menyokong WebRTC.<br>' +
+      '<em>This browser does not support WebRTC. Please use Chrome or Firefox.</em></div>';
+    return;
+  }
+
+  navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    .then(function(stream) {
+      localStream = stream;
+      var vid = document.getElementById('localVideo');
+      vid.srcObject = stream;
+      updateMediaButtons();
+
+      // Generate unique peer ID: ax_<roomId_no_dashes>_<random6>
+      var suffix = Math.random().toString(36).slice(2, 8);
+      myPeerId   = 'ax_' + roomId.replace(/-/g, '') + '_' + suffix;
+
+      peer = new Peer(myPeerId);
+
+      peer.on('open', function() {
+        // Register in Sheets, then connect to existing peers
+        google.script.run
+          .withSuccessHandler(function() {
+            connectToExistingPeers(roomId);
+            pollInterval = setInterval(function() {
+              connectToExistingPeers(roomId);
+            }, 10000);
+          })
+          .withFailureHandler(function(e) {
+            showToast('⚠️ Ralat mendaftar: ' + e.message);
+            // Still try to connect even if registration fails
+            connectToExistingPeers(roomId);
+            pollInterval = setInterval(function() {
+              connectToExistingPeers(roomId);
+            }, 10000);
+          })
+          .registerParticipant(roomId, myPeerId, SESSION.name);
+      });
+
+      // Answer incoming calls
+      peer.on('call', function(call) {
+        call.answer(localStream);
+        activePeers[call.peer] = { call: call };
+        call.on('stream', function(remoteStream) {
+          addRemoteVideo(call.peer, remoteStream, call.peer.split('_').pop());
+        });
+        call.on('close', function() {
+          removeRemoteVideo(call.peer);
+          delete activePeers[call.peer];
+        });
+        call.on('error', function() {
+          removeRemoteVideo(call.peer);
+          delete activePeers[call.peer];
+        });
+      });
+
+      peer.on('error', function(err) {
+        if (err.type !== 'peer-unavailable') {
+          showToast('⚠️ WebRTC error: ' + err.type);
+        }
+      });
+    })
+    .catch(function(err) {
+      // Rebuild the video area with error message
+      area.innerHTML =
+        '<div id="remoteVideos"></div>' +
+        '<video id="localVideo" autoplay muted playsinline></video>';
+      document.getElementById('remoteVideos').innerHTML =
+        '<div class="vid-no-peers" style="color:#ff8a80">' +
+        '⚠️ Tidak dapat akses kamera/mikrofon:<br><small>' + esc(err.message) + '</small><br><br>' +
+        '<em>Sila benarkan akses kamera & mikrofon dalam pelayar anda.<br>' +
+        'Please allow camera & microphone access in your browser.</em></div>';
+    });
+}
+
+function connectToExistingPeers(roomId) {
+  if (!peer || !localStream) return;
+  google.script.run
+    .withSuccessHandler(function(participants) {
+      if (!participants) return;
+      var noMsg = document.getElementById('noPeersMsg');
+      if (noMsg && participants.length > 0) noMsg.style.display = 'none';
+      participants.forEach(function(p) {
+        if (p.peerId === myPeerId) return;
+        if (activePeers[p.peerId]) return;  // already connected
+        var call = peer.call(p.peerId, localStream);
+        if (!call) return;
+        activePeers[p.peerId] = { call: call };
+        call.on('stream', function(remoteStream) {
+          addRemoteVideo(p.peerId, remoteStream, p.name || p.peerId.split('_').pop());
+        });
+        call.on('close', function() {
+          removeRemoteVideo(p.peerId);
+          delete activePeers[p.peerId];
+          if (Object.keys(activePeers).length === 0) {
+            var nm = document.getElementById('noPeersMsg');
+            if (nm) nm.style.display = '';
+          }
+        });
+        call.on('error', function() {
+          removeRemoteVideo(p.peerId);
+          delete activePeers[p.peerId];
+        });
+      });
+    })
+    .withFailureHandler(function() {}) // Silently ignore poll failures
+    .getParticipants(roomId);
+}
+
+function addRemoteVideo(peerId, stream, label) {
+  var container = document.getElementById('remoteVideos');
+  if (!container) return;
+  removeRemoteVideo(peerId);  // remove stale entry if any
+  var safeId  = 'rv_' + peerId.replace(/[^a-z0-9]/gi, '_');
+  var wrapper = document.createElement('div');
+  wrapper.id        = safeId;
+  wrapper.className = 'remote-vid-wrap';
+  var vid = document.createElement('video');
+  vid.autoplay    = true;
+  vid.playsinline = true;
+  vid.srcObject   = stream;
+  var lbl = document.createElement('div');
+  lbl.className   = 'vid-label';
+  lbl.textContent = '👤 ' + (label || 'Peserta');
+  wrapper.appendChild(vid);
+  wrapper.appendChild(lbl);
+  container.appendChild(wrapper);
+}
+
+function removeRemoteVideo(peerId) {
+  var el = document.getElementById('rv_' + peerId.replace(/[^a-z0-9]/gi, '_'));
+  if (el) el.remove();
+}
+
+// ── Media controls ────────────────────────────────────────────
+function toggleMute() {
+  if (!localStream) return;
+  var track = localStream.getAudioTracks()[0];
+  if (!track) return;
+  track.enabled = !track.enabled;
+  updateMediaButtons();
+  showToast(track.enabled ? '🎤 Mikrofon dihidupkan / Mic on' : '🔇 Mikrofon dimatikan / Mic muted');
+}
+
+function toggleCamera() {
+  if (!localStream) return;
+  var track = localStream.getVideoTracks()[0];
+  if (!track) return;
+  track.enabled = !track.enabled;
+  var vid = document.getElementById('localVideo');
+  if (vid) vid.style.opacity = track.enabled ? '1' : '0.3';
+  updateMediaButtons();
+  showToast(track.enabled ? '📷 Kamera dihidupkan / Camera on' : '📷 Kamera dimatikan / Camera off');
+}
+
+function updateMediaButtons() {
+  if (!localStream) return;
+  var aTrack   = localStream.getAudioTracks()[0];
+  var vTrack   = localStream.getVideoTracks()[0];
+  var muteBtn  = document.getElementById('btnMute');
+  var camBtn   = document.getElementById('btnCam');
+  if (muteBtn) {
+    var muted = aTrack ? !aTrack.enabled : true;
+    muteBtn.textContent = muted ? '🔇 Unmute' : '🎤 Mute';
+    muteBtn.className   = muted ? 'sb sb-red'  : 'sb sb-green';
+  }
+  if (camBtn) {
+    var camOff = vTrack ? !vTrack.enabled : true;
+    camBtn.textContent = camOff ? '📷 Cam On'  : '📷 Cam Off';
+    camBtn.className   = camOff ? 'sb sb-gray' : 'sb sb-green';
   }
 }
 
@@ -1313,7 +1468,7 @@ function sendChat() {
   if (!msg) return;
   addMsg(SESSION.name, msg, 'me');
   input.value = '';
-  if (jitsiApi) { try { jitsiApi.executeCommand('sendChatMessage', msg); } catch(e) {} }
+  // Chat is local UI only (no Jitsi relay)
 }
 
 function addMsg(sender, text, type) {
@@ -1415,17 +1570,42 @@ function doSaveNotes() {
 function doLeave() {
   isRecording = false;
   stopRec();
-  if (jitsiApi) { try { jitsiApi.dispose(); } catch(e) {} jitsiApi = null; }
-  fullTx = '';
 
+  // Stop polling
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+
+  // Close all peer calls
+  Object.keys(activePeers).forEach(function(pid) {
+    try { activePeers[pid].call.close(); } catch(e) {}
+  });
+  activePeers = {};
+
+  // Destroy peer
+  if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
+
+  // Stop local media tracks
+  if (localStream) {
+    localStream.getTracks().forEach(function(t) { t.stop(); });
+    localStream = null;
+  }
+
+  fullTx = '';
   var leftRoom = ROOM_ID;
-  ROOM_ID = '';
+  var leftPeer = myPeerId;
+  ROOM_ID  = '';
+  myPeerId = '';
 
   if (SESSION && !SESSION.isGuest) {
     google.script.run
       .withSuccessHandler(function() {})
       .withFailureHandler(function() {})
       .leaveRoom(SESSION.email, SESSION.token, leftRoom);
+  }
+  if (leftRoom && leftPeer) {
+    google.script.run
+      .withSuccessHandler(function() {})
+      .withFailureHandler(function() {})
+      .removeParticipant(leftRoom, leftPeer);
   }
 
   // Go back to home (create room panel)

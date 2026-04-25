@@ -103,13 +103,12 @@ function createRoom(email, token, roomName) {
       return { success: false, message: '⛔ Sesi tamat. Sila log masuk semula. / Session expired.' };
     const ss         = getSpreadsheet();
     const sheet      = getOrCreateSheet(ss, 'Rooms',
-      ['Room ID','Room Name','Dicipta Oleh','Date-Time','Invite Link','Status','PDF Notes Link','Catatan','Jitsi Room']);
+      ['Room ID','Room Name','Dicipta Oleh','Date-Time','Invite Link','Status','PDF Notes Link','Catatan']);
     const roomId     = generateRoomId();
-    const jitsiRoom  = generateJitsiRoom();
     const inviteLink = getWebAppUrl() + '?page=join&room=' + roomId;
-    sheet.appendRow([roomId, roomName, email, new Date(), inviteLink, 'Aktif', '', '', jitsiRoom]);
+    sheet.appendRow([roomId, roomName, email, new Date(), inviteLink, 'Aktif', '', '']);
     logActivity('BUAT_BILIK', email, 'Bilik dibuat: ' + roomName, roomId);
-    return { success: true, roomId, inviteLink, roomName, jitsiRoom,
+    return { success: true, roomId, inviteLink, roomName,
              message: '✅ Bilik berjaya dibuat! / Room created successfully!' };
   } catch(err) { return { success: false, message: 'Ralat: ' + err.message }; }
 }
@@ -140,7 +139,7 @@ function getRoomInfo(roomId) {
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === roomId)
         return { roomId: data[i][0], roomName: data[i][1], createdBy: data[i][2],
-                 status: data[i][5], jitsiRoom: data[i][8] || '' };
+                 status: data[i][5] };
     }
     return null;
   } catch(e) { return null; }
@@ -317,6 +316,50 @@ function generateJitsiRoom() {
   let id = 'ax';
   for (let i = 0; i < 16; i++) id += chars[Math.floor(Math.random() * chars.length)];
   return id;
+}
+
+// ── WEBRTC PARTICIPANT PRESENCE ───────────────────────────────
+function getParticipants(roomId) {
+  try {
+    const sheet = getOrCreateSheet(getSpreadsheet(), 'Participants',
+      ['Room ID', 'Peer ID', 'Display Name', 'Joined At']);
+    const data  = sheet.getDataRange().getValues();
+    const list  = [];
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === roomId) {
+        list.push({ peerId: data[i][1], name: data[i][2] });
+      }
+    }
+    return list;
+  } catch(e) { return []; }
+}
+
+function registerParticipant(roomId, peerId, displayName) {
+  try {
+    const sheet = getOrCreateSheet(getSpreadsheet(), 'Participants',
+      ['Room ID', 'Peer ID', 'Display Name', 'Joined At']);
+    // Avoid duplicates
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === roomId && data[i][1] === peerId) return { success: true };
+    }
+    sheet.appendRow([roomId, peerId, displayName || '', new Date()]);
+    return { success: true };
+  } catch(e) { return { success: false, message: e.message }; }
+}
+
+function removeParticipant(roomId, peerId) {
+  try {
+    const sheet = getSpreadsheet().getSheetByName('Participants');
+    if (!sheet) return { success: true };
+    const data = sheet.getDataRange().getValues();
+    for (let i = data.length - 1; i >= 1; i--) {
+      if (data[i][0] === roomId && data[i][1] === peerId) {
+        sheet.deleteRow(i + 1);
+      }
+    }
+    return { success: true };
+  } catch(e) { return { success: false, message: e.message }; }
 }
 
 // ── SCHEDULED MEETINGS ────────────────────────────────────────
