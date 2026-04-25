@@ -81,8 +81,13 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
           z-index:2000;align-items:center;justify-content:center;padding:20px}
 .modal-bg.show{display:flex}
 .modal-box{background:#fff;border-radius:16px;padding:28px;
-           width:100%;max-width:430px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+           width:100%;max-width:430px;box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative}
 .modal-box h3{margin-bottom:18px;color:#333;font-size:18px}
+.modal-close-x{position:absolute;top:12px;right:14px;width:28px;height:28px;
+               border:none;background:transparent;font-size:18px;line-height:1;
+               cursor:pointer;color:#888;border-radius:50%;display:flex;
+               align-items:center;justify-content:center;transition:.2s}
+.modal-close-x:hover{background:#f0f0f0;color:#333}
 .inv-box{background:#f0f7ff;border:2px dashed var(--blue);border-radius:8px;
          padding:14px;font-size:12px;word-break:break-all;
          color:#333;font-family:monospace;margin:12px 0}
@@ -266,6 +271,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
   <!-- Invite modal -->
   <div class="modal-bg" id="inviteModal">
     <div class="modal-box">
+      <button class="modal-close-x" onclick="document.getElementById('inviteModal').classList.remove('show')" title="Close">&#x2715;</button>
       <h3>🎉 Bilik Berjaya Dibuat!</h3>
       <p style="font-size:14px;color:#555;margin-bottom:10px">
         Kongsikan pautan ini kepada peserta lain:<br>
@@ -275,9 +281,6 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
       <button class="btn btn-blue"  onclick="homeCopyLink()">📋 Salin Pautan / Copy Link</button>
       <button class="btn btn-green" onclick="homeProceedToRoom()" style="margin-top:8px">
         🚀 Masuk Bilik Sekarang / Enter Room
-      </button>
-      <button class="btn btn-gray"  onclick="document.getElementById('inviteModal').classList.remove('show')" style="margin-top:8px">
-        ✕ Tutup / Close
       </button>
     </div>
   </div>
@@ -992,6 +995,8 @@ function initJitsi() {
         enableWelcomePage   : false,
         disableDeepLinking  : true,
         prejoinPageEnabled  : false,
+        disableLobby        : true,
+        lobby               : { enabled: false, autoKnock: false },
         enableLobbyChat     : false,
         hideLobbyButton     : true,
         toolbarButtons: [
