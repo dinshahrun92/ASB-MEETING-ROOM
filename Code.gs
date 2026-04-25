@@ -309,3 +309,75 @@ function generateRoomId() {
   }
   return id;
 }
+
+// ── SCHEDULED MEETINGS ────────────────────────────────────────
+function scheduleRoom(email, token, roomName, scheduledDatetime, durationMins, description) {
+  try {
+    if (!validateToken(email, token))
+      return { success: false, message: '⛔ Sesi tamat. Sila log masuk semula. / Session expired.' };
+    email = email.toLowerCase().trim();
+    const ss    = getSpreadsheet();
+    const sheet = getOrCreateSheet(ss, 'Scheduled Meetings',
+      ['Schedule ID','Room Name','Creator Email','Scheduled DateTime',
+       'Duration (mins)','Description','Room ID','Status','Created At']);
+    const schedId = 'SCH-' + Utilities.getUuid().substring(0, 8).toUpperCase();
+    const dt      = new Date(scheduledDatetime);
+    sheet.appendRow([schedId, roomName, email, dt, durationMins || 60,
+                     description || '', '', 'Scheduled', new Date()]);
+    logActivity('JADUAL_BILIK', email, 'Mesyuarat dijadualkan: ' + roomName, schedId);
+    return { success: true, schedId,
+             message: '✅ Mesyuarat berjaya dijadualkan! / Meeting scheduled successfully!' };
+  } catch(err) { return { success: false, message: 'Ralat: ' + err.message }; }
+}
+
+function getMyScheduledMeetings(email, token) {
+  try {
+    if (!validateToken(email, token))
+      return { success: false, message: '⛔ Sesi tamat. / Session expired.' };
+    email = email.toLowerCase().trim();
+    const sheet = getSpreadsheet().getSheetByName('Scheduled Meetings');
+    if (!sheet) return { success: true, meetings: [] };
+    const data     = sheet.getDataRange().getValues();
+    const meetings = [];
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][2]).toLowerCase() === email && data[i][7] !== 'Cancelled') {
+        meetings.push({
+          schedId    : data[i][0],
+          roomName   : data[i][1],
+          datetime   : data[i][3] instanceof Date ? data[i][3].toISOString() : String(data[i][3]),
+          duration   : data[i][4],
+          description: data[i][5],
+          roomId     : data[i][6],
+          status     : data[i][7]
+        });
+      }
+    }
+    meetings.sort(function(a, b) { return new Date(a.datetime) - new Date(b.datetime); });
+    return { success: true, meetings };
+  } catch(err) { return { success: false, message: 'Ralat: ' + err.message }; }
+}
+
+function startScheduledMeeting(email, token, schedId) {
+  try {
+    if (!validateToken(email, token))
+      return { success: false, message: '⛔ Sesi tamat. / Session expired.' };
+    email = email.toLowerCase().trim();
+    const ss    = getSpreadsheet();
+    const sheet = ss.getSheetByName('Scheduled Meetings');
+    if (!sheet)
+      return { success: false, message: '⚠️ Jadual tidak dijumpai. / Schedule not found.' };
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === schedId && String(data[i][2]).toLowerCase() === email) {
+        const result = createRoom(email, token, data[i][1]);
+        if (result.success) {
+          sheet.getRange(i + 1, 7).setValue(result.roomId);
+          sheet.getRange(i + 1, 8).setValue('Active');
+          logActivity('MULA_JADUAL', email, 'Jadual dimulakan: ' + data[i][1], schedId);
+        }
+        return result;
+      }
+    }
+    return { success: false, message: '⚠️ Jadual tidak dijumpai. / Schedule not found.' };
+  } catch(err) { return { success: false, message: 'Ralat: ' + err.message }; }
+}

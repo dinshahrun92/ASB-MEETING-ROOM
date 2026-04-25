@@ -92,6 +92,32 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
          padding:14px;font-size:12px;word-break:break-all;
          color:#333;font-family:monospace;margin:12px 0}
 
+/* Schedule section */
+.sched-section{margin-top:16px;border-top:1px solid #e0e0e0;padding-top:14px}
+.sched-section-title{font-size:13px;font-weight:700;color:#555;
+                     display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sched-refresh{border:none;background:none;cursor:pointer;font-size:14px;color:var(--blue);padding:2px 6px}
+.sched-list{max-height:260px;overflow-y:auto}
+.sched-item{background:#f8f9fa;border-radius:8px;padding:10px 12px;
+            margin-bottom:8px;border-left:3px solid var(--blue)}
+.sched-item .sname{font-weight:600;font-size:13px;color:#333;margin-bottom:3px}
+.sched-item .smeta{font-size:11px;color:#888;margin-bottom:7px;line-height:1.5}
+.sched-item .sbtns{display:flex;gap:5px}
+.sbtn-start{flex:1;padding:6px 8px;border:none;border-radius:5px;font-size:11px;
+            font-weight:600;cursor:pointer;background:var(--green);color:#fff;transition:.2s}
+.sbtn-start:hover{background:#2d8f47}
+.sbtn-copy{flex:1;padding:6px 8px;border:none;border-radius:5px;font-size:11px;
+           font-weight:600;cursor:pointer;background:#e8f0fe;color:var(--blue);transition:.2s}
+.sbtn-copy:hover{background:#d2e3fc}
+.no-sched{text-align:center;color:#999;font-size:12px;padding:14px 0}
+.sched-form-sel{width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:8px;
+                font-size:14px;outline:none;transition:.2s}
+.sched-form-sel:focus{border-color:var(--blue)}
+.sched-form-ta{width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:8px;
+               font-size:13px;outline:none;resize:none;min-height:70px;
+               font-family:inherit;transition:.2s}
+.sched-form-ta:focus{border-color:var(--blue)}
+
 /* Toast */
 .toast{position:fixed;bottom:20px;right:20px;background:#333;color:#fff;
        padding:12px 18px;border-radius:10px;font-size:13px;z-index:9999;
@@ -260,6 +286,21 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
         <button class="btn btn-green" onclick="doCreateRoom()">
           🚀 Buat &amp; Masuk Bilik / Create Room
         </button>
+
+        <!-- Schedule section -->
+        <div class="sched-section">
+          <div class="sched-section-title">
+            <span>📋 Mesyuarat Saya / My Meetings</span>
+            <button class="sched-refresh" onclick="loadMyMeetings()" title="Refresh">🔄</button>
+          </div>
+          <button class="btn btn-blue" onclick="openScheduleModal()" style="margin-bottom:10px">
+            📅 Jadual Mesyuarat Baru / Schedule Meeting
+          </button>
+          <div class="sched-list" id="schedList">
+            <div class="no-sched">Tiada mesyuarat. / No meetings.</div>
+          </div>
+        </div>
+
         <button class="btn btn-gray" onclick="doLogout()" style="margin-top:10px">
           🚪 Log Keluar / Logout
         </button>
@@ -282,6 +323,40 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
       <button class="btn btn-green" onclick="homeProceedToRoom()" style="margin-top:8px">
         🚀 Masuk Bilik Sekarang / Enter Room
       </button>
+    </div>
+  </div>
+
+  <!-- Schedule modal -->
+  <div class="modal-bg" id="schedModal">
+    <div class="modal-box">
+      <button class="modal-close-x" onclick="document.getElementById('schedModal').classList.remove('show')" title="Close">&#x2715;</button>
+      <h3>📅 Jadual Mesyuarat Baru / Schedule New Meeting</h3>
+      <div id="schedAlert" class="alert"></div>
+      <div class="fg">
+        <label>🏠 Nama Mesyuarat / Meeting Name</label>
+        <input type="text" id="schedName" placeholder="cth: Mesyuarat Projek ABC">
+      </div>
+      <div class="fg">
+        <label>📅 Tarikh &amp; Masa / Date &amp; Time</label>
+        <input type="datetime-local" id="schedDatetime" style="width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none">
+      </div>
+      <div class="fg">
+        <label>⏱️ Tempoh / Duration</label>
+        <select id="schedDuration" class="sched-form-sel">
+          <option value="30">30 minit / minutes</option>
+          <option value="60" selected>1 jam / hour</option>
+          <option value="90">1.5 jam / hours</option>
+          <option value="120">2 jam / hours</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>📝 Penerangan / Description <em style="font-weight:400;color:#999">(pilihan / optional)</em></label>
+        <textarea id="schedDesc" class="sched-form-ta" placeholder="Ringkasan agenda mesyuarat..."></textarea>
+      </div>
+      <div class="fspin" id="spSched">
+        <div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:var(--blue)"></div>
+      </div>
+      <button class="btn btn-green" onclick="doScheduleMeeting()">📅 Jadualkan / Schedule</button>
     </div>
   </div>
 </div>
@@ -709,6 +784,7 @@ function showCreatePanel() {
   document.getElementById('homeGreeting').innerHTML =
     '👋 Selamat datang, <strong>' + esc(SESSION.name) + '</strong>! (' + esc(SESSION.email) + ')';
   clearAlert('homeAlert');
+  loadMyMeetings();
 }
 
 function doCreateRoom() {
@@ -1012,6 +1088,15 @@ function initJitsi() {
       }
     });
     jitsiApi.addEventListener('videoConferenceLeft', function() { doLeave(); });
+    // Disable lobby as soon as this user becomes moderator (prevents "Asking to join")
+    jitsiApi.addEventListener('videoConferenceJoined', function() {
+      try { jitsiApi.executeCommand('toggleLobby', false); } catch(e) {}
+    });
+    jitsiApi.addEventListener('participantRoleChanged', function(ev) {
+      if (ev && ev.role === 'moderator') {
+        try { jitsiApi.executeCommand('toggleLobby', false); } catch(e) {}
+      }
+    });
   } catch(e) {
     wrap.innerHTML =
       '<p style="color:#ff6b6b;padding:20px;text-align:center">' +
@@ -1280,6 +1365,111 @@ function doAiSummary() {
 
 function closeDModal(id) {
   document.getElementById(id).classList.remove('show');
+}
+
+// ================================================================
+//  SCHEDULE MEETINGS
+// ================================================================
+function openScheduleModal() {
+  clearAlert('schedAlert');
+  document.getElementById('schedName').value = '';
+  document.getElementById('schedDesc').value  = '';
+  // Default datetime: next hour
+  var next = new Date();
+  next.setHours(next.getHours() + 1, 0, 0, 0);
+  var offset = next.getTimezoneOffset() * 60000;
+  var local  = new Date(next.getTime() - offset).toISOString().slice(0, 16);
+  document.getElementById('schedDatetime').value = local;
+  document.getElementById('schedDatetime').min   = new Date(Date.now() - offset).toISOString().slice(0, 16);
+  document.getElementById('schedModal').classList.add('show');
+}
+
+function doScheduleMeeting() {
+  var name = val('schedName');
+  var dt   = document.getElementById('schedDatetime').value;
+  var dur  = document.getElementById('schedDuration').value;
+  var desc = document.getElementById('schedDesc').value.trim();
+  if (!name) { showAlert('schedAlert', '⚠️ Sila masukkan nama mesyuarat.', 'error'); return; }
+  if (!dt)   { showAlert('schedAlert', '⚠️ Sila pilih tarikh dan masa.', 'error'); return; }
+  showFspin('spSched');
+  google.script.run
+    .withSuccessHandler(function(r) {
+      hideFspin('spSched');
+      if (r.success) {
+        document.getElementById('schedModal').classList.remove('show');
+        showToast('✅ ' + r.message);
+        loadMyMeetings();
+      } else {
+        showAlert('schedAlert', r.message, 'error');
+      }
+    })
+    .withFailureHandler(function(e) {
+      hideFspin('spSched');
+      showAlert('schedAlert', 'Ralat: ' + e.message, 'error');
+    })
+    .scheduleRoom(SESSION.email, SESSION.token, name, dt, parseInt(dur, 10), desc);
+}
+
+function loadMyMeetings() {
+  var list = document.getElementById('schedList');
+  if (!list || !SESSION || SESSION.isGuest) return;
+  list.innerHTML = '<div class="no-sched">⏳ Memuatkan... / Loading...</div>';
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.success || !r.meetings || r.meetings.length === 0) {
+        list.innerHTML = '<div class="no-sched">📭 Tiada mesyuarat dijadualkan. / No meetings scheduled.</div>';
+        return;
+      }
+      var now  = new Date();
+      var html = '';
+      r.meetings.forEach(function(m) {
+        var dt    = new Date(m.datetime);
+        var dtStr = dt.toLocaleDateString('ms-MY', { weekday:'short', day:'numeric', month:'short', year:'numeric' }) +
+                    ' &bull; ' + dt.toLocaleTimeString('ms-MY', { hour:'2-digit', minute:'2-digit' });
+        var isPast = dt < now;
+        html += '<div class="sched-item">' +
+          '<div class="sname">' + esc(m.roomName) + '</div>' +
+          '<div class="smeta">🗓️ ' + dtStr + ' &bull; ⏱️ ' + m.duration + ' min' +
+          (m.description ? '<br>📝 ' + esc(m.description) : '') + '</div>' +
+          '<div class="sbtns">';
+        if (!isPast) {
+          html += '<button class="sbtn-start" onclick="doStartScheduled(\'' +
+            esc(m.schedId) + '\')">▶ Mula / Start</button>';
+        }
+        if (m.roomId) {
+          var lnk = APP_URL + '?page=join&room=' + m.roomId;
+          html += '<button class="sbtn-copy" onclick="navigator.clipboard.writeText(\'' +
+            lnk + '\').then(function(){showToast(\'✅ Pautan disalin!\')})">🔗 Link</button>';
+        }
+        html += '</div></div>';
+      });
+      list.innerHTML = html;
+    })
+    .withFailureHandler(function() {
+      list.innerHTML = '<div class="no-sched">⚠️ Gagal memuatkan. / Failed to load.</div>';
+    })
+    .getMyScheduledMeetings(SESSION.email, SESSION.token);
+}
+
+function doStartScheduled(schedId) {
+  showPgLoader('Memulakan mesyuarat... / Starting meeting...');
+  google.script.run
+    .withSuccessHandler(function(r) {
+      hidePgLoader();
+      if (r.success) {
+        document.getElementById('homeInviteLink').textContent = r.inviteLink;
+        ROOM_ID = r.roomId;
+        document.getElementById('inviteModal').classList.add('show');
+        loadMyMeetings();
+      } else {
+        showToast('❌ ' + r.message);
+      }
+    })
+    .withFailureHandler(function(e) {
+      hidePgLoader();
+      showToast('❌ Ralat: ' + e.message);
+    })
+    .startScheduledMeeting(SESSION.email, SESSION.token, schedId);
 }
 
 // ================================================================
