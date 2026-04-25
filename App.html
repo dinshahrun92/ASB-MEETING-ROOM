@@ -323,6 +323,214 @@ input:focus{border-color:rgba(79,142,247,.9);background:rgba(79,142,247,.12);
   .side{width:100%;border-left:none;border-top:1px solid rgba(255,255,255,.1)}
   .room-idtag{max-width:100px}
 }
+
+/* ================================================================
+   DASHBOARD & SPLIT-LOGIN  (desktop-optimised)
+   ================================================================ */
+
+/* Override: viewHome fills full viewport, no centering */
+#viewHome{position:relative;z-index:1;min-height:100vh;
+  flex-direction:column;align-items:stretch;justify-content:flex-start}
+
+/* ── Split-screen login ── */
+.login-split{display:flex;width:100%;min-height:100vh}
+.login-brand{flex:1;min-width:0;padding:56px 52px;
+  background:linear-gradient(155deg,#0b1640 0%,#1a56c4 60%,#0d47a1 100%);
+  display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;overflow:hidden}
+.login-brand::after{content:'';position:absolute;width:500px;height:500px;
+  border-radius:50%;background:rgba(255,255,255,.045);
+  bottom:-200px;right:-160px;pointer-events:none}
+.lb-logo{font-size:40px;margin-bottom:14px}
+.lb-title{font-size:34px;font-weight:800;color:#fff;line-height:1.2;
+  margin-bottom:14px;max-width:420px}
+.lb-desc{font-size:15px;color:rgba(255,255,255,.7);line-height:1.75;
+  margin-bottom:36px;max-width:400px}
+.lb-features{display:flex;flex-direction:column;gap:14px}
+.lb-feat{display:flex;align-items:center;gap:14px;
+  color:rgba(255,255,255,.82);font-size:14px}
+.lb-feat-ic{width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  background:rgba(255,255,255,.14);
+  display:flex;align-items:center;justify-content:center;font-size:18px}
+.lb-footer{font-size:12px;color:rgba(255,255,255,.32);margin-top:40px}
+.login-form-panel{width:460px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:40px 32px;background:rgba(0,0,0,.18)}
+@media(max-width:900px){
+  .login-split{flex-direction:column}
+  .login-brand{padding:36px 28px;min-height:auto}
+  .login-form-panel{width:100%;padding:28px 20px}
+}
+
+/* ── Dashboard layout ── */
+.dash-layout{display:flex;width:100%;min-height:100vh}
+
+/* Sidebar */
+.dash-sidebar{width:236px;flex-shrink:0;
+  background:rgba(5,5,22,.92);backdrop-filter:blur(28px);
+  -webkit-backdrop-filter:blur(28px);
+  border-right:1px solid rgba(255,255,255,.07);
+  display:flex;flex-direction:column;
+  height:100vh;position:sticky;top:0;overflow-y:auto}
+.dsb-logo{padding:20px 18px 16px;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.06)}
+.dsb-logo-ic{font-size:22px}
+.dsb-logo-tx{font-size:17px;font-weight:800;color:#fff}
+.dsb-user{margin:10px 8px;padding:11px 13px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:11px}
+.dsb-uname{font-size:13px;font-weight:700;color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsb-uemail{font-size:11px;color:rgba(255,255,255,.38);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsb-nav{padding:6px 6px;flex:1}
+.dsb-nav-lbl{font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;color:rgba(255,255,255,.28);padding:10px 8px 5px}
+.dsb-item{display:flex;align-items:center;gap:10px;width:100%;
+  padding:10px 12px;border-radius:10px;border:1px solid transparent;
+  background:transparent;color:rgba(255,255,255,.52);
+  font-size:13px;font-weight:500;cursor:pointer;text-align:left;
+  transition:.17s;margin-bottom:2px}
+.dsb-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.dsb-item.active{background:rgba(79,142,247,.18);color:#fff;
+  border-color:rgba(79,142,247,.28)}
+.dsb-ic{font-size:15px;flex-shrink:0}
+.dsb-bottom{padding:10px 6px;border-top:1px solid rgba(255,255,255,.06)}
+.dsb-logout{display:flex;align-items:center;gap:10px;width:100%;
+  padding:10px 12px;border-radius:10px;border:none;
+  background:transparent;color:rgba(255,95,95,.65);
+  font-size:13px;cursor:pointer;text-align:left;transition:.17s}
+.dsb-logout:hover{background:rgba(255,95,95,.1);color:#ff8a80}
+
+/* Main content */
+.dash-main{flex:1;overflow-y:auto;min-width:0;min-height:100vh}
+
+/* Header */
+.dash-hdr{padding:28px 32px 8px;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  flex-wrap:wrap;gap:14px}
+.dash-greeting{font-size:24px;font-weight:800;color:#fff}
+.dash-dateline{font-size:12px;color:rgba(255,255,255,.42);margin-top:4px}
+.dash-hdr-btns{display:flex;gap:8px;flex-wrap:wrap}
+.dhb{padding:9px 16px;border-radius:9px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:.2s;border:none;white-space:nowrap}
+.dhb-green{background:rgba(67,209,122,.75);color:#fff}
+.dhb-green:hover{background:#43d17a;box-shadow:0 6px 20px rgba(67,209,122,.4)}
+.dhb-blue{background:rgba(79,142,247,.75);color:#fff}
+.dhb-blue:hover{background:#4f8ef7;box-shadow:0 6px 20px rgba(79,142,247,.35)}
+.dhb-outline{background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);
+  border:1px solid rgba(255,255,255,.18)!important}
+.dhb-outline:hover{background:rgba(255,255,255,.13);color:#fff}
+
+/* Stats row */
+.dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+  padding:20px 32px 4px}
+.stat-card{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;padding:18px 20px;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.04) 0%,transparent 55%);
+  pointer-events:none}
+.sc-icon{font-size:26px;margin-bottom:8px}
+.sc-val{font-size:30px;font-weight:800;color:#fff;line-height:1}
+.sc-lbl{font-size:11px;color:rgba(255,255,255,.42);margin-top:5px}
+
+/* Quick-action cards */
+.qa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  padding:16px 32px}
+.qa-card{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.085);
+  border-radius:13px;padding:20px;cursor:pointer;text-align:center;transition:.2s}
+.qa-card:hover{background:rgba(255,255,255,.09);transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.qa-ic{font-size:30px;margin-bottom:10px}
+.qa-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:3px}
+.qa-desc{font-size:11px;color:rgba(255,255,255,.42);line-height:1.5}
+
+/* Sections */
+.dash-sec{padding:4px 32px 28px}
+.dash-sec-hdr{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;padding-top:4px}
+.dash-sec-title{font-size:15px;font-weight:700;color:#fff}
+.dash-sec-btn{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;
+  cursor:pointer;border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);transition:.17s}
+.dash-sec-btn:hover{background:rgba(255,255,255,.14);color:#fff}
+
+/* Room cards */
+.rooms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(256px,1fr));gap:12px}
+.room-card{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.085);
+  border-radius:13px;padding:16px;transition:.2s;position:relative;overflow:hidden}
+.room-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#4f8ef7,#a78bfa);border-radius:13px 13px 0 0}
+.room-card:hover{background:rgba(255,255,255,.09);border-color:rgba(79,142,247,.3);
+  transform:translateY(-2px)}
+.rc-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-id{font-size:10px;color:rgba(255,255,255,.38);font-family:monospace;margin-bottom:10px}
+.rc-meta{font-size:11px;color:rgba(255,255,255,.38);margin-bottom:12px;
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.rc-status{display:inline-block;padding:2px 8px;border-radius:10px;
+  font-size:10px;font-weight:700;text-transform:uppercase}
+.rcs-aktif{background:rgba(67,209,122,.15);color:#69f0ae;
+  border:1px solid rgba(67,209,122,.25)}
+.rc-actions{display:flex;gap:5px;flex-wrap:wrap}
+.rca{padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;
+  cursor:pointer;border:none;transition:.17s;white-space:nowrap}
+.rca-enter{background:rgba(67,209,122,.22);color:#69f0ae}
+.rca-enter:hover{background:rgba(67,209,122,.5)}
+.rca-copy{background:rgba(79,142,247,.18);color:#90b8fb}
+.rca-copy:hover{background:rgba(79,142,247,.45)}
+.rca-edit{background:rgba(255,255,255,.1);color:rgba(255,255,255,.72)}
+.rca-edit:hover{background:rgba(255,255,255,.18)}
+
+/* Empty state */
+.dash-empty{text-align:center;padding:36px 20px;color:rgba(255,255,255,.28);
+  border:1.5px dashed rgba(255,255,255,.1);border-radius:13px}
+.dash-empty-icon{font-size:36px;margin-bottom:10px}
+.dash-empty p{font-size:13px;line-height:1.7}
+
+/* Meetings table */
+.mtable{width:100%;border-collapse:collapse}
+.mtable th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.5px;color:rgba(255,255,255,.32);padding:8px 12px;
+  border-bottom:1px solid rgba(255,255,255,.07)}
+.mtable td{padding:11px 12px;font-size:13px;color:rgba(255,255,255,.78);
+  border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+.mtable tr:last-child td{border-bottom:none}
+.mtable tr:hover td{background:rgba(255,255,255,.025)}
+.ms-badge{display:inline-block;padding:2px 9px;border-radius:20px;
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.ms-upcoming{background:rgba(79,142,247,.18);color:#90b8fb;
+  border:1px solid rgba(79,142,247,.28)}
+.ms-past{background:rgba(255,255,255,.06);color:rgba(255,255,255,.32);
+  border:1px solid rgba(255,255,255,.08)}
+.mtable-actions{display:flex;gap:5px;flex-wrap:wrap}
+.mta{padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;
+  cursor:pointer;border:none;transition:.17s;white-space:nowrap}
+.mta-start{background:rgba(67,209,122,.22);color:#69f0ae}
+.mta-start:hover{background:rgba(67,209,122,.5)}
+.mta-edit{background:rgba(255,255,255,.1);color:rgba(255,255,255,.72)}
+.mta-edit:hover{background:rgba(255,255,255,.18)}
+.mta-cancel{background:rgba(255,95,95,.12);color:#ff8a80}
+.mta-cancel:hover{background:rgba(255,95,95,.3)}
+.mta-copy{background:rgba(79,142,247,.18);color:#90b8fb}
+.mta-copy:hover{background:rgba(79,142,247,.45)}
+
+/* Join panel */
+.join-panel{max-width:540px}
+.join-input-row{display:flex;gap:8px}
+.join-input-row input{flex:1;font-family:monospace;font-size:15px;
+  letter-spacing:2px;text-transform:uppercase}
+.join-big-btn{padding:13px 22px;border-radius:10px;font-size:14px;font-weight:700;
+  cursor:pointer;border:none;background:rgba(79,142,247,.85);color:#fff;
+  transition:.2s;white-space:nowrap}
+.join-big-btn:hover{background:#4f8ef7;box-shadow:0 6px 20px rgba(79,142,247,.4)}
+
+@media(max-width:900px){
+  .dash-stats{grid-template-columns:1fr 1fr}
+  .qa-grid{grid-template-columns:1fr 1fr}
+  .dash-hdr,.dash-stats,.dash-sec,.qa-grid{padding-left:16px;padding-right:16px}
+  .dash-sidebar{width:200px}
+}
 </style>
 </head>
 <body>
@@ -343,90 +551,242 @@ input:focus{border-color:rgba(79,142,247,.9);background:rgba(79,142,247,.12);
 <div class="toast" id="toast"></div>
 
 <!-- ================================================================
-     VIEW 1 — HOME  (Login + Create Room)
+     VIEW 1 — HOME  (Login → Dashboard)
      ================================================================ -->
-<div id="viewHome" class="view auth-screen">
-  <div class="card">
-    <div class="card-header" style="background:linear-gradient(135deg,#1a73e8,#0d47a1)">
-      <div class="logo">🖥️</div>
-      <h1>AxiCom Meeting Room</h1>
-      <p>Video Call · Chat · Nota Automatik</p>
+<div id="viewHome" class="view">
+
+  <!-- ═══ STATE A: Login screen (not authenticated) ═══ -->
+  <div id="homeLoginState" class="login-split">
+
+    <!-- Branding column -->
+    <div class="login-brand">
+      <div>
+        <div class="lb-logo">🖥️</div>
+        <div class="lb-title">AxiCom<br>Meeting Room</div>
+        <div class="lb-desc">Platform mesyuarat video bersepadu untuk pasukan anda.<br>
+          Integrated video meeting platform optimised for desktop.</div>
+        <div class="lb-features">
+          <div class="lb-feat"><div class="lb-feat-ic">📹</div>WebRTC video call — no plugin needed</div>
+          <div class="lb-feat"><div class="lb-feat-ic">💬</div>Real-time chat panel</div>
+          <div class="lb-feat"><div class="lb-feat-ic">🎙️</div>Auto transcription BM &amp; EN</div>
+          <div class="lb-feat"><div class="lb-feat-ic">🤖</div>AI meeting summary</div>
+          <div class="lb-feat"><div class="lb-feat-ic">📄</div>Save notes to PDF in Google Drive</div>
+          <div class="lb-feat"><div class="lb-feat-ic">📅</div>Meeting scheduler</div>
+        </div>
+      </div>
+      <div class="lb-footer">© AxiCom Meeting Room · Powered by WebRTC + Google Sheets</div>
     </div>
-    <div class="card-body">
 
-      <div class="tabs">
-        <button class="tab active" id="hTabLogin"  onclick="homeTab('login')">🔑 Log Masuk</button>
-        <button class="tab"        id="hTabCreate" onclick="homeTab('create')">➕ Buat Bilik</button>
-      </div>
-
-      <div id="homeAlert" class="alert"></div>
-
-      <!-- Login sub-panel -->
-      <div id="hPanelLogin">
-        <div class="fg">
-          <label>📧 E-mel</label>
-          <input type="email" id="loginEmail" placeholder="nama@email.com">
+    <!-- Login form column -->
+    <div class="login-form-panel">
+      <div class="card" style="max-width:400px;width:100%">
+        <div class="card-header" style="background:linear-gradient(135deg,#1a73e8,#0d47a1)">
+          <div class="logo">🖥️</div>
+          <h1>Log Masuk / Login</h1>
+          <p>AxiCom Meeting Room</p>
         </div>
-        <div class="fg">
-          <label>🔒 Kata Laluan / Password</label>
-          <input type="password" id="loginPass" placeholder="••••••••"
-                 onkeypress="if(event.key==='Enter') doLogin()">
-        </div>
-        <div class="fspin" id="spLogin">
-          <div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:var(--blue)"></div>
-        </div>
-        <button class="btn btn-blue" onclick="doLogin()">Log Masuk / Login</button>
-        <div class="divider">atau / or</div>
-        <button class="btn btn-gray" onclick="showView('register')">
-          📝 Daftar Akaun Baru / Register
-        </button>
-      </div>
-
-      <!-- Create room sub-panel -->
-      <div id="hPanelCreate" class="hidden">
-        <div id="homeGreeting"
-          style="background:rgba(67,209,122,.15);border:1px solid rgba(67,209,122,.3);
-                 border-radius:10px;padding:12px 14px;
-                 margin-bottom:16px;font-size:14px;color:#69f0ae"></div>
-        <div class="fg">
-          <label>🏠 Nama Bilik / Room Name</label>
-          <input type="text" id="roomName" placeholder="cth: Mesyuarat Projek ABC">
-        </div>
-        <div class="fspin" id="spRoom">
-          <div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:var(--blue)"></div>
-        </div>
-        <button class="btn btn-green" onclick="doCreateRoom()">
-          🚀 Buat &amp; Masuk Bilik / Create Room
-        </button>
-
-        <!-- Schedule section -->
-        <div class="sched-section">
-          <div class="sched-section-title">
-            <span>📋 Mesyuarat Saya / My Meetings</span>
-            <button class="sched-refresh" onclick="loadMyMeetings()" title="Refresh">🔄</button>
+        <div class="card-body">
+          <div id="homeAlert" class="alert"></div>
+          <div class="fg">
+            <label>📧 E-mel / Email</label>
+            <input type="email" id="loginEmail" placeholder="nama@email.com">
           </div>
-          <button class="btn btn-blue" onclick="openScheduleModal()" style="margin-bottom:10px">
-            📅 Jadual Mesyuarat Baru / Schedule Meeting
+          <div class="fg">
+            <label>🔒 Kata Laluan / Password</label>
+            <input type="password" id="loginPass" placeholder="••••••••"
+                   onkeypress="if(event.key==='Enter') doLogin()">
+          </div>
+          <div class="fspin" id="spLogin">
+            <div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:var(--blue)"></div>
+          </div>
+          <button class="btn btn-blue" onclick="doLogin()">🔑 Log Masuk / Login</button>
+          <div class="divider">atau / or</div>
+          <button class="btn btn-gray" onclick="showView('register')">
+            📝 Daftar Akaun Baru / Register
           </button>
-          <div class="sched-list" id="schedList">
-            <div class="no-sched">Tiada mesyuarat. / No meetings.</div>
-          </div>
         </div>
+      </div>
+    </div>
 
-        <button class="btn btn-gray" onclick="doLogout()" style="margin-top:10px">
-          🚪 Log Keluar / Logout
+  </div><!-- end homeLoginState -->
+
+  <!-- ═══ STATE B: Dashboard (authenticated) ═══ -->
+  <div id="homeDashState" class="hidden dash-layout">
+
+    <!-- Sidebar -->
+    <aside class="dash-sidebar">
+      <div class="dsb-logo">
+        <span class="dsb-logo-ic">🖥️</span>
+        <span class="dsb-logo-tx">AxiCom</span>
+      </div>
+      <div class="dsb-user">
+        <div class="dsb-uname" id="dashUserName">—</div>
+        <div class="dsb-uemail" id="dashUserEmail">—</div>
+      </div>
+      <nav class="dsb-nav">
+        <div class="dsb-nav-lbl">Menu</div>
+        <button class="dsb-item active" id="dnDash"  onclick="dashNav('dash')">
+          <span class="dsb-ic">📊</span> Dashboard
+        </button>
+        <button class="dsb-item" id="dnRooms" onclick="dashNav('rooms')">
+          <span class="dsb-ic">🏠</span> My Rooms
+        </button>
+        <button class="dsb-item" id="dnSched" onclick="dashNav('sched')">
+          <span class="dsb-ic">📅</span> Scheduled
+        </button>
+        <button class="dsb-item" id="dnJoin"  onclick="dashNav('join')">
+          <span class="dsb-ic">🔗</span> Join Room
+        </button>
+      </nav>
+      <div class="dsb-bottom">
+        <button class="dsb-logout" onclick="doLogout()">
+          <span>🚪</span> Log Keluar / Logout
         </button>
       </div>
+    </aside>
 
-    </div>
-  </div>
+    <!-- Main content area -->
+    <main class="dash-main">
 
-  <!-- Invite modal -->
+      <!-- Header -->
+      <div class="dash-hdr">
+        <div>
+          <div class="dash-greeting" id="dashGreeting">Selamat datang!</div>
+          <div class="dash-dateline" id="dashDateline"></div>
+        </div>
+        <div class="dash-hdr-btns">
+          <button class="dhb dhb-green"   onclick="openNewRoomModal()">➕ Bilik Baru / New Room</button>
+          <button class="dhb dhb-blue"    onclick="openScheduleModal()">📅 Jadualkan / Schedule</button>
+          <button class="dhb dhb-outline" onclick="loadDashboard()">🔄 Refresh</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="dash-stats">
+        <div class="stat-card">
+          <div class="sc-icon">🏠</div>
+          <div class="sc-val" id="statRooms">—</div>
+          <div class="sc-lbl">Bilik Dicipta / Rooms Created</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-icon">📅</div>
+          <div class="sc-val" id="statUpcoming">—</div>
+          <div class="sc-lbl">Akan Datang / Upcoming</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-icon">📆</div>
+          <div class="sc-val" id="statToday">—</div>
+          <div class="sc-lbl">Mesyuarat Hari Ini / Today</div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="qa-grid">
+        <div class="qa-card" onclick="openNewRoomModal()">
+          <div class="qa-ic">🚀</div>
+          <div class="qa-title">Mulakan Segera / Start Now</div>
+          <div class="qa-desc">Buat bilik baru dan jemput peserta serta-merta.</div>
+        </div>
+        <div class="qa-card" onclick="dashNav('join')">
+          <div class="qa-ic">🔗</div>
+          <div class="qa-title">Sertai Bilik / Join Room</div>
+          <div class="qa-desc">Masukkan Room ID untuk menyertai mesyuarat.</div>
+        </div>
+        <div class="qa-card" onclick="openScheduleModal()">
+          <div class="qa-ic">📅</div>
+          <div class="qa-title">Jadualkan / Schedule</div>
+          <div class="qa-desc">Tetapkan tarikh dan masa mesyuarat akan datang.</div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: Dashboard overview ── -->
+      <div id="secDash">
+        <div class="dash-sec">
+          <div class="dash-sec-hdr">
+            <span class="dash-sec-title">🏠 Bilik Terbaru / Recent Rooms</span>
+            <button class="dash-sec-btn" onclick="dashNav('rooms')">Lihat Semua →</button>
+          </div>
+          <div id="dashRoomsPreview">
+            <div class="dash-empty"><div class="dash-empty-icon">🏠</div>
+              <p>Tiada bilik dicipta lagi.<br><em>No rooms created yet.</em></p></div>
+          </div>
+        </div>
+        <div class="dash-sec">
+          <div class="dash-sec-hdr">
+            <span class="dash-sec-title">📅 Mesyuarat Akan Datang / Upcoming Meetings</span>
+            <button class="dash-sec-btn" onclick="dashNav('sched')">Lihat Semua →</button>
+          </div>
+          <div id="dashSchedPreview">
+            <div class="dash-empty"><div class="dash-empty-icon">📅</div>
+              <p>Tiada mesyuarat dijadualkan.<br><em>No meetings scheduled.</em></p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: My Rooms ── -->
+      <div id="secRooms" class="hidden">
+        <div class="dash-sec">
+          <div class="dash-sec-hdr">
+            <span class="dash-sec-title">🏠 Semua Bilik / All My Rooms</span>
+            <button class="dash-sec-btn" onclick="openNewRoomModal()">➕ Buat Bilik Baru</button>
+          </div>
+          <div id="dashRoomsFull">
+            <div class="dash-empty"><div class="dash-empty-icon">🏠</div>
+              <p>Tiada bilik. / No rooms yet.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: Scheduled Meetings ── -->
+      <div id="secSched" class="hidden">
+        <div class="dash-sec">
+          <div class="dash-sec-hdr">
+            <span class="dash-sec-title">📅 Semua Jadual / All Scheduled Meetings</span>
+            <button class="dash-sec-btn" onclick="openScheduleModal()">➕ Jadual Baru</button>
+          </div>
+          <div id="dashSchedFull">
+            <div class="dash-empty"><div class="dash-empty-icon">📅</div>
+              <p>Tiada jadual. / No scheduled meetings.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: Join Room ── -->
+      <div id="secJoin" class="hidden">
+        <div class="dash-sec">
+          <div class="dash-sec-hdr">
+            <span class="dash-sec-title">🔗 Sertai Bilik / Join Room</span>
+          </div>
+          <div class="join-panel">
+            <div class="fg">
+              <label style="font-size:14px;margin-bottom:10px">🔑 Room ID</label>
+              <div class="join-input-row">
+                <input type="text" id="joinIdInput"
+                  placeholder="XXX-XXX-XXX" maxlength="11"
+                  oninput="this.value=this.value.toUpperCase()"
+                  onkeypress="if(event.key==='Enter') doJoinById()">
+                <button class="join-big-btn" onclick="doJoinById()">🚀 Sertai / Join</button>
+              </div>
+            </div>
+            <p style="margin-top:12px;font-size:12px;color:rgba(255,255,255,.38);line-height:1.7">
+              Format: XXX-XXX-XXX · Atau gunakan pautan jemputan yang dihantar kepada anda.<br>
+              <em>Or use the invite link sent to you.</em>
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div><!-- end homeDashState -->
+
+  <!-- ─── MODALS ─── -->
+
+  <!-- Invite modal (after room created / scheduled meeting started) -->
   <div class="modal-bg" id="inviteModal">
     <div class="modal-box">
       <button class="modal-close-x" onclick="document.getElementById('inviteModal').classList.remove('show')" title="Close">&#x2715;</button>
       <h3>🎉 Bilik Berjaya Dibuat!</h3>
-      <p style="font-size:14px;color:#555;margin-bottom:10px">
+      <p style="font-size:14px;color:rgba(255,255,255,.65);margin-bottom:10px">
         Kongsikan pautan ini kepada peserta lain:<br>
         <em>Share this link with other participants:</em>
       </p>
@@ -438,7 +798,47 @@ input:focus{border-color:rgba(79,142,247,.9);background:rgba(79,142,247,.12);
     </div>
   </div>
 
-  <!-- Schedule modal -->
+  <!-- New room modal -->
+  <div class="modal-bg" id="newRoomModal">
+    <div class="modal-box">
+      <button class="modal-close-x" onclick="document.getElementById('newRoomModal').classList.remove('show')" title="Close">&#x2715;</button>
+      <h3>🚀 Bilik Mesyuarat Baru / New Meeting Room</h3>
+      <div id="newRoomAlert" class="alert"></div>
+      <div class="fg">
+        <label>🏠 Nama Bilik / Room Name</label>
+        <input type="text" id="newRoomName"
+          placeholder="cth: Mesyuarat Projek ABC"
+          onkeypress="if(event.key==='Enter') doCreateRoom()">
+      </div>
+      <div class="fspin" id="spRoom">
+        <div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:var(--blue)"></div>
+      </div>
+      <button class="btn btn-green" onclick="doCreateRoom()">
+        🚀 Buat &amp; Masuk Bilik / Create &amp; Enter Room
+      </button>
+    </div>
+  </div>
+
+  <!-- Edit room modal -->
+  <div class="modal-bg" id="editRoomModal">
+    <div class="modal-box">
+      <button class="modal-close-x" onclick="document.getElementById('editRoomModal').classList.remove('show')" title="Close">&#x2715;</button>
+      <h3>✏️ Edit Bilik / Edit Room</h3>
+      <div id="editRoomAlert" class="alert"></div>
+      <input type="hidden" id="editRoomId">
+      <div class="fg">
+        <label>🏠 Nama Bilik Baru / New Room Name</label>
+        <input type="text" id="editRoomName" placeholder="Nama bilik baru"
+               onkeypress="if(event.key==='Enter') confirmEditRoom()">
+      </div>
+      <div class="fspin" id="spEditRoom">
+        <div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:var(--blue)"></div>
+      </div>
+      <button class="btn btn-blue" onclick="confirmEditRoom()">💾 Simpan / Save</button>
+    </div>
+  </div>
+
+  <!-- Schedule new meeting modal -->
   <div class="modal-bg" id="schedModal">
     <div class="modal-box">
       <button class="modal-close-x" onclick="document.getElementById('schedModal').classList.remove('show')" title="Close">&#x2715;</button>
@@ -462,7 +862,7 @@ input:focus{border-color:rgba(79,142,247,.9);background:rgba(79,142,247,.12);
         </select>
       </div>
       <div class="fg">
-        <label>📝 Penerangan / Description <em style="font-weight:400;color:#999">(pilihan / optional)</em></label>
+        <label>📝 Penerangan / Description <em style="font-weight:400;opacity:.6">(pilihan / optional)</em></label>
         <textarea id="schedDesc" class="sched-form-ta" placeholder="Ringkasan agenda mesyuarat..."></textarea>
       </div>
       <div class="fspin" id="spSched">
@@ -471,7 +871,43 @@ input:focus{border-color:rgba(79,142,247,.9);background:rgba(79,142,247,.12);
       <button class="btn btn-green" onclick="doScheduleMeeting()">📅 Jadualkan / Schedule</button>
     </div>
   </div>
-</div>
+
+  <!-- Edit meeting modal -->
+  <div class="modal-bg" id="editMeetingModal">
+    <div class="modal-box">
+      <button class="modal-close-x" onclick="document.getElementById('editMeetingModal').classList.remove('show')" title="Close">&#x2715;</button>
+      <h3>✏️ Edit Jadual / Edit Meeting</h3>
+      <div id="editMeetingAlert" class="alert"></div>
+      <input type="hidden" id="editSchedId">
+      <div class="fg">
+        <label>🏠 Nama Mesyuarat / Meeting Name</label>
+        <input type="text" id="editSchedName" placeholder="Nama mesyuarat">
+      </div>
+      <div class="fg">
+        <label>📅 Tarikh &amp; Masa / Date &amp; Time</label>
+        <input type="datetime-local" id="editSchedDatetime">
+      </div>
+      <div class="fg">
+        <label>⏱️ Tempoh / Duration</label>
+        <select id="editSchedDuration" class="sched-form-sel">
+          <option value="30">30 minit / minutes</option>
+          <option value="60">1 jam / hour</option>
+          <option value="90">1.5 jam / hours</option>
+          <option value="120">2 jam / hours</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>📝 Penerangan / Description</label>
+        <textarea id="editSchedDesc" class="sched-form-ta" placeholder="Ringkasan agenda mesyuarat..."></textarea>
+      </div>
+      <div class="fspin" id="spEditMeeting">
+        <div class="spin" style="width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:var(--blue)"></div>
+      </div>
+      <button class="btn btn-blue" onclick="confirmEditMeeting()">💾 Simpan / Save</button>
+    </div>
+  </div>
+
+</div><!-- end #viewHome -->
 
 <!-- ================================================================
      VIEW 2 — REGISTER
@@ -856,24 +1292,9 @@ function hidePgLoader() {
 }
 
 // ================================================================
-//  HOME VIEW
+//  HOME VIEW — DASHBOARD
 // ================================================================
-function homeTab(tab) {
-  var isLogin = (tab === 'login');
-  document.getElementById('hTabLogin').classList.toggle('active', isLogin);
-  document.getElementById('hTabCreate').classList.toggle('active', !isLogin);
-  document.getElementById('hPanelLogin').classList.toggle('hidden', !isLogin);
-  if (!isLogin && !SESSION) {
-    // Not logged in — bounce back
-    document.getElementById('hTabLogin').classList.add('active');
-    document.getElementById('hTabCreate').classList.remove('active');
-    document.getElementById('hPanelLogin').classList.remove('hidden');
-    showAlert('homeAlert','⚠️ Sila log masuk dahulu / Please login first.','error');
-    return;
-  }
-  document.getElementById('hPanelCreate').classList.toggle('hidden', isLogin);
-  clearAlert('homeAlert');
-}
+function homeTab() {} // no-op (tabs removed in favour of dashboard)
 
 function doLogin() {
   var email = val('loginEmail');
@@ -887,7 +1308,7 @@ function doLogin() {
         SESSION = { token:r.token, name:r.name, email:r.email };
         localStorage.setItem('vidchat_session', JSON.stringify(SESSION));
         showAlert('homeAlert','✅ Log masuk berjaya!','success');
-        setTimeout(showCreatePanel, 600);
+        setTimeout(showDashboard, 600);
       } else {
         showAlert('homeAlert', r.message, 'error');
       }
@@ -899,38 +1320,339 @@ function doLogin() {
     .loginUser(email, pass);
 }
 
-function showCreatePanel() {
-  document.getElementById('hPanelLogin').classList.add('hidden');
-  document.getElementById('hPanelCreate').classList.remove('hidden');
-  document.getElementById('hTabLogin').classList.remove('active');
-  document.getElementById('hTabCreate').classList.add('active');
-  document.getElementById('homeGreeting').innerHTML =
-    '👋 Selamat datang, <strong>' + esc(SESSION.name) + '</strong>! (' + esc(SESSION.email) + ')';
-  clearAlert('homeAlert');
+// Show full-screen dashboard (replaces old showCreatePanel)
+function showDashboard() {
+  var lState = document.getElementById('homeLoginState');
+  var dState = document.getElementById('homeDashState');
+  if (lState) lState.classList.add('hidden');
+  if (dState) dState.classList.remove('hidden');
+  if (SESSION) {
+    document.getElementById('dashUserName').textContent  = SESSION.name  || '—';
+    document.getElementById('dashUserEmail').textContent = SESSION.email || '—';
+    var h = new Date().getHours();
+    var greet = h < 12 ? 'Selamat Pagi' : h < 17 ? 'Selamat Tengahari' : 'Selamat Petang';
+    document.getElementById('dashGreeting').textContent =
+      greet + ', ' + SESSION.name + '!';
+    document.getElementById('dashDateline').textContent =
+      new Date().toLocaleDateString('ms-MY', {
+        weekday:'long', day:'numeric', month:'long', year:'numeric'
+      });
+  }
+  dashNav('dash');
+  loadDashboard();
+}
+
+// Backward-compat alias called from routeTo / doJoinLogin / etc.
+function showCreatePanel() { showDashboard(); }
+
+// Switch dashboard sections
+function dashNav(sec) {
+  var navMap = { dash:'dnDash', rooms:'dnRooms', sched:'dnSched', join:'dnJoin' };
+  var secMap = { dash:'secDash', rooms:'secRooms', sched:'secSched', join:'secJoin' };
+  Object.keys(navMap).forEach(function(k) {
+    var btn = document.getElementById(navMap[k]);
+    if (btn) btn.classList.toggle('active', k === sec);
+    var el = document.getElementById(secMap[k]);
+    if (el) el.classList.toggle('hidden', k !== sec);
+  });
+  // Scroll main back to top
+  var main = document.querySelector('.dash-main');
+  if (main) main.scrollTop = 0;
+}
+
+// Load all dashboard data
+var _cachedRooms    = [];
+var _cachedMeetings = [];
+
+function loadDashboard() {
+  if (!SESSION || SESSION.isGuest) return;
+  loadMyRooms();
   loadMyMeetings();
 }
 
+// ── ROOMS ────────────────────────────────────────────────────────
+function loadMyRooms() {
+  google.script.run
+    .withSuccessHandler(function(rooms) {
+      _cachedRooms = rooms || [];
+      updateStats();
+      renderRoomsGrid(_cachedRooms, 'dashRoomsPreview', 4);
+      renderRoomsGrid(_cachedRooms, 'dashRoomsFull', 999);
+    })
+    .withFailureHandler(function(e) {
+      showToast('⚠️ Gagal memuatkan bilik: ' + e.message);
+    })
+    .getMyRooms(SESSION.email, SESSION.token);
+}
+
+function renderRoomsGrid(rooms, containerId, limit) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  if (!rooms || rooms.length === 0) {
+    el.innerHTML = '<div class="dash-empty"><div class="dash-empty-icon">🏠</div>' +
+      '<p>Tiada bilik dicipta lagi.<br><em>No rooms created yet.</em></p></div>';
+    return;
+  }
+  var html = '<div class="rooms-grid">';
+  rooms.slice(0, limit).forEach(function(r) {
+    var dt  = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ms-MY') : '—';
+    var inv = APP_URL + '?page=join&room=' + r.roomId;
+    var safeName = esc(r.roomName).replace(/'/g, '&#39;');
+    html +=
+      '<div class="room-card">' +
+        '<div class="rc-name" title="' + esc(r.roomName) + '">' + esc(r.roomName) + '</div>' +
+        '<div class="rc-id">🔑 ' + esc(r.roomId) + '</div>' +
+        '<div class="rc-meta">' +
+          '<span>📅 ' + dt + '</span>' +
+          '<span class="rc-status rcs-aktif">' + esc(r.status || 'Aktif') + '</span>' +
+        '</div>' +
+        '<div class="rc-actions">' +
+          '<button class="rca rca-enter" onclick="enterRoom(\'' + esc(r.roomId) + '\')">▶ Masuk</button>' +
+          '<button class="rca rca-copy"  onclick="copyRoomLink(\'' + esc(inv) + '\')">🔗 Link</button>' +
+          '<button class="rca rca-edit"  onclick="doEditRoom(\'' + esc(r.roomId) + '\',\'' + safeName + '\')">✏️ Edit</button>' +
+        '</div>' +
+      '</div>';
+  });
+  html += '</div>';
+  if (rooms.length > limit) {
+    html += '<p style="text-align:center;margin-top:12px;font-size:12px;color:rgba(255,255,255,.38)">' +
+      '+ ' + (rooms.length - limit) + ' bilik lagi. Klik "Lihat Semua" →</p>';
+  }
+  el.innerHTML = html;
+}
+
+// ── MEETINGS ─────────────────────────────────────────────────────
+function loadMyMeetings() {
+  if (!SESSION || SESSION.isGuest) return;
+  google.script.run
+    .withSuccessHandler(function(r) {
+      _cachedMeetings = (r.success && r.meetings) ? r.meetings : [];
+      updateStats();
+      renderMeetingsTable(_cachedMeetings, 'dashSchedPreview', 5);
+      renderMeetingsTable(_cachedMeetings, 'dashSchedFull', 999);
+    })
+    .withFailureHandler(function() {})
+    .getMyScheduledMeetings(SESSION.email, SESSION.token);
+}
+
+function renderMeetingsTable(meetings, containerId, limit) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  var now = new Date();
+  if (!meetings || meetings.length === 0) {
+    el.innerHTML = '<div class="dash-empty"><div class="dash-empty-icon">📅</div>' +
+      '<p>Tiada mesyuarat dijadualkan.<br><em>No meetings scheduled.</em></p></div>';
+    return;
+  }
+  var show = meetings.slice(0, limit);
+  var html = '<div style="overflow-x:auto"><table class="mtable"><thead><tr>' +
+    '<th>Nama / Name</th><th>Tarikh / Date</th>' +
+    '<th>Tempoh</th><th>Status</th><th>Tindakan / Actions</th>' +
+    '</tr></thead><tbody>';
+  show.forEach(function(m) {
+    var dt     = new Date(m.datetime);
+    var isPast = dt < now;
+    var dtStr  = dt.toLocaleDateString('ms-MY', {day:'numeric',month:'short',year:'numeric'}) +
+                 ' ' + dt.toLocaleTimeString('ms-MY', {hour:'2-digit',minute:'2-digit'});
+    var sid    = esc(m.schedId);
+    var sname  = esc(m.roomName).replace(/'/g,'&#39;');
+    var sdt    = esc(m.datetime);
+    var sdur   = esc(String(m.duration || 60));
+    var sdesc  = esc(m.description || '').replace(/'/g,'&#39;');
+    var inv    = m.roomId ? APP_URL + '?page=join&room=' + m.roomId : '';
+    html += '<tr>' +
+      '<td><strong>' + esc(m.roomName) + '</strong>' +
+        (m.description ? '<br><span style="font-size:11px;color:rgba(255,255,255,.38)">' +
+          esc(m.description.slice(0,60)) + '</span>' : '') +
+      '</td>' +
+      '<td style="white-space:nowrap">' + dtStr + '</td>' +
+      '<td>' + (m.duration || 60) + ' min</td>' +
+      '<td><span class="ms-badge ' + (isPast ? 'ms-past' : 'ms-upcoming') + '">' +
+        (isPast ? 'Lepas' : 'Akan Datang') + '</span></td>' +
+      '<td><div class="mtable-actions">';
+    if (!isPast) {
+      html += '<button class="mta mta-start"  onclick="doStartScheduled(\'' + sid + '\')">▶ Mula</button>';
+      html += '<button class="mta mta-edit"   onclick="doEditMeeting(\'' + sid + '\',\'' + sname + '\',\'' + sdt + '\',' + sdur + ',\'' + sdesc + '\')">✏️ Edit</button>';
+      html += '<button class="mta mta-cancel" onclick="doCancelMeeting(\'' + sid + '\')">✕ Batal</button>';
+    }
+    if (inv) {
+      html += '<button class="mta mta-copy" onclick="copyRoomLink(\'' + esc(inv) + '\')">🔗 Link</button>';
+    }
+    html += '</div></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+
+function updateStats() {
+  var now = new Date();
+  var upcoming = _cachedMeetings.filter(function(m) {
+    return new Date(m.datetime) > now;
+  });
+  var today = _cachedMeetings.filter(function(m) {
+    return new Date(m.datetime).toDateString() === now.toDateString();
+  });
+  document.getElementById('statRooms').textContent    = _cachedRooms.length;
+  document.getElementById('statUpcoming').textContent = upcoming.length;
+  document.getElementById('statToday').textContent    = today.length;
+}
+
+// ── ROOM ACTIONS ──────────────────────────────────────────────────
+function enterRoom(roomId) {
+  showPgLoader('Mengesahkan bilik... / Validating room...');
+  ROOM_ID = roomId;
+  google.script.run
+    .withSuccessHandler(function(r) {
+      hidePgLoader();
+      if (r.success) { showView('room'); initRoom(); }
+      else { ROOM_ID = ''; showToast('❌ ' + r.message); }
+    })
+    .withFailureHandler(function(e) {
+      hidePgLoader(); ROOM_ID = ''; showToast('❌ Ralat: ' + e.message);
+    })
+    .validateAndJoinRoom(SESSION.email, SESSION.token, roomId);
+}
+
+function copyRoomLink(link) {
+  navigator.clipboard.writeText(link)
+    .then(function() { showToast('✅ Pautan disalin! / Link copied!'); });
+}
+
+// ── NEW ROOM MODAL ────────────────────────────────────────────────
+function openNewRoomModal() {
+  clearAlert('newRoomAlert');
+  document.getElementById('newRoomName').value = '';
+  document.getElementById('newRoomModal').classList.add('show');
+  setTimeout(function() { document.getElementById('newRoomName').focus(); }, 100);
+}
+
 function doCreateRoom() {
-  var name = val('roomName');
-  if (!name) { showAlert('homeAlert','⚠️ Sila masukkan nama bilik.','error'); return; }
+  var name = val('newRoomName');
+  if (!name) { showAlert('newRoomAlert','⚠️ Sila masukkan nama bilik.','error'); return; }
   showFspin('spRoom');
   google.script.run
     .withSuccessHandler(function(r) {
       hideFspin('spRoom');
       if (r.success) {
+        document.getElementById('newRoomModal').classList.remove('show');
         document.getElementById('homeInviteLink').textContent = r.inviteLink;
-        // Store room id for proceeding
         ROOM_ID = r.roomId;
         document.getElementById('inviteModal').classList.add('show');
+        loadDashboard();
       } else {
-        showAlert('homeAlert', r.message, 'error');
+        showAlert('newRoomAlert', r.message, 'error');
       }
     })
     .withFailureHandler(function(e) {
       hideFspin('spRoom');
-      showAlert('homeAlert','Ralat: ' + e.message,'error');
+      showAlert('newRoomAlert','Ralat: ' + e.message,'error');
     })
     .createRoom(SESSION.email, SESSION.token, name);
+}
+
+// ── EDIT ROOM ─────────────────────────────────────────────────────
+function doEditRoom(roomId, currentName) {
+  clearAlert('editRoomAlert');
+  document.getElementById('editRoomId').value   = roomId;
+  document.getElementById('editRoomName').value = currentName;
+  document.getElementById('editRoomModal').classList.add('show');
+  setTimeout(function() { document.getElementById('editRoomName').focus(); }, 100);
+}
+
+function confirmEditRoom() {
+  var id   = document.getElementById('editRoomId').value;
+  var name = document.getElementById('editRoomName').value.trim();
+  if (!name) { showAlert('editRoomAlert','⚠️ Sila masukkan nama bilik.','error'); return; }
+  showFspin('spEditRoom');
+  google.script.run
+    .withSuccessHandler(function(r) {
+      hideFspin('spEditRoom');
+      if (r.success) {
+        document.getElementById('editRoomModal').classList.remove('show');
+        showToast('✅ Nama bilik dikemaskini! / Room renamed!');
+        loadDashboard();
+      } else {
+        showAlert('editRoomAlert', r.message, 'error');
+      }
+    })
+    .withFailureHandler(function(e) {
+      hideFspin('spEditRoom');
+      showAlert('editRoomAlert','Ralat: ' + e.message,'error');
+    })
+    .renameRoom(SESSION.email, SESSION.token, id, name);
+}
+
+// ── EDIT MEETING ──────────────────────────────────────────────────
+function doEditMeeting(schedId, name, datetime, duration, desc) {
+  clearAlert('editMeetingAlert');
+  document.getElementById('editSchedId').value       = schedId;
+  document.getElementById('editSchedName').value     = name || '';
+  document.getElementById('editSchedDuration').value = String(duration || 60);
+  document.getElementById('editSchedDesc').value     = desc || '';
+  var dtVal = '';
+  try {
+    var d = new Date(datetime);
+    var offset = d.getTimezoneOffset() * 60000;
+    dtVal = new Date(d.getTime() - offset).toISOString().slice(0, 16);
+  } catch(e) {}
+  document.getElementById('editSchedDatetime').value = dtVal;
+  document.getElementById('editMeetingModal').classList.add('show');
+}
+
+function confirmEditMeeting() {
+  var id   = document.getElementById('editSchedId').value;
+  var name = document.getElementById('editSchedName').value.trim();
+  var dt   = document.getElementById('editSchedDatetime').value;
+  var dur  = document.getElementById('editSchedDuration').value;
+  var desc = document.getElementById('editSchedDesc').value.trim();
+  if (!name) { showAlert('editMeetingAlert','⚠️ Sila masukkan nama.','error'); return; }
+  if (!dt)   { showAlert('editMeetingAlert','⚠️ Sila pilih tarikh.','error'); return; }
+  showFspin('spEditMeeting');
+  google.script.run
+    .withSuccessHandler(function(r) {
+      hideFspin('spEditMeeting');
+      if (r.success) {
+        document.getElementById('editMeetingModal').classList.remove('show');
+        showToast('✅ Jadual dikemaskini! / Meeting updated!');
+        loadMyMeetings();
+      } else {
+        showAlert('editMeetingAlert', r.message, 'error');
+      }
+    })
+    .withFailureHandler(function(e) {
+      hideFspin('spEditMeeting');
+      showAlert('editMeetingAlert','Ralat: ' + e.message,'error');
+    })
+    .editScheduledMeeting(SESSION.email, SESSION.token, id, name, dt, parseInt(dur, 10), desc);
+}
+
+function doCancelMeeting(schedId) {
+  if (!confirm('Batalkan mesyuarat ini? / Cancel this meeting?')) return;
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (r.success) { showToast('✅ Mesyuarat dibatalkan. / Meeting cancelled.'); loadMyMeetings(); }
+      else showToast('❌ ' + r.message);
+    })
+    .withFailureHandler(function(e) { showToast('❌ Ralat: ' + e.message); })
+    .cancelScheduledMeeting(SESSION.email, SESSION.token, schedId);
+}
+
+// ── JOIN BY ID ────────────────────────────────────────────────────
+function doJoinById() {
+  var id = document.getElementById('joinIdInput').value.trim().toUpperCase();
+  if (!id) { showToast('⚠️ Sila masukkan Room ID.'); return; }
+  showPgLoader('Mengesahkan bilik... / Validating room...');
+  ROOM_ID = id;
+  google.script.run
+    .withSuccessHandler(function(r) {
+      hidePgLoader();
+      if (r.success) { showView('room'); initRoom(); }
+      else { ROOM_ID = ''; showToast('❌ ' + r.message); }
+    })
+    .withFailureHandler(function(e) {
+      hidePgLoader(); ROOM_ID = ''; showToast('❌ Ralat: ' + e.message);
+    })
+    .validateAndJoinRoom(SESSION.email, SESSION.token, id);
 }
 
 function homeCopyLink() {
@@ -950,11 +1672,13 @@ function doLogout() {
   localStorage.removeItem('vidchat_session');
   SESSION = null;
   ROOM_ID = '';
-  // Reset home panel
-  document.getElementById('hPanelCreate').classList.add('hidden');
-  document.getElementById('hPanelLogin').classList.remove('hidden');
-  document.getElementById('hTabLogin').classList.add('active');
-  document.getElementById('hTabCreate').classList.remove('active');
+  _cachedRooms    = [];
+  _cachedMeetings = [];
+  // Hide dashboard, show login
+  var dState = document.getElementById('homeDashState');
+  var lState = document.getElementById('homeLoginState');
+  if (dState) dState.classList.add('hidden');
+  if (lState) lState.classList.remove('hidden');
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPass').value  = '';
   clearAlert('homeAlert');
@@ -1692,47 +2416,6 @@ function doScheduleMeeting() {
       showAlert('schedAlert', 'Ralat: ' + e.message, 'error');
     })
     .scheduleRoom(SESSION.email, SESSION.token, name, dt, parseInt(dur, 10), desc);
-}
-
-function loadMyMeetings() {
-  var list = document.getElementById('schedList');
-  if (!list || !SESSION || SESSION.isGuest) return;
-  list.innerHTML = '<div class="no-sched">⏳ Memuatkan... / Loading...</div>';
-  google.script.run
-    .withSuccessHandler(function(r) {
-      if (!r.success || !r.meetings || r.meetings.length === 0) {
-        list.innerHTML = '<div class="no-sched">📭 Tiada mesyuarat dijadualkan. / No meetings scheduled.</div>';
-        return;
-      }
-      var now  = new Date();
-      var html = '';
-      r.meetings.forEach(function(m) {
-        var dt    = new Date(m.datetime);
-        var dtStr = dt.toLocaleDateString('ms-MY', { weekday:'short', day:'numeric', month:'short', year:'numeric' }) +
-                    ' &bull; ' + dt.toLocaleTimeString('ms-MY', { hour:'2-digit', minute:'2-digit' });
-        var isPast = dt < now;
-        html += '<div class="sched-item">' +
-          '<div class="sname">' + esc(m.roomName) + '</div>' +
-          '<div class="smeta">🗓️ ' + dtStr + ' &bull; ⏱️ ' + m.duration + ' min' +
-          (m.description ? '<br>📝 ' + esc(m.description) : '') + '</div>' +
-          '<div class="sbtns">';
-        if (!isPast) {
-          html += '<button class="sbtn-start" onclick="doStartScheduled(\'' +
-            esc(m.schedId) + '\')">▶ Mula / Start</button>';
-        }
-        if (m.roomId) {
-          var lnk = APP_URL + '?page=join&room=' + m.roomId;
-          html += '<button class="sbtn-copy" onclick="navigator.clipboard.writeText(\'' +
-            lnk + '\').then(function(){showToast(\'✅ Pautan disalin!\')})">🔗 Link</button>';
-        }
-        html += '</div></div>';
-      });
-      list.innerHTML = html;
-    })
-    .withFailureHandler(function() {
-      list.innerHTML = '<div class="no-sched">⚠️ Gagal memuatkan. / Failed to load.</div>';
-    })
-    .getMyScheduledMeetings(SESSION.email, SESSION.token);
 }
 
 function doStartScheduled(schedId) {

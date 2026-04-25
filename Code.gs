@@ -433,3 +433,101 @@ function startScheduledMeeting(email, token, schedId) {
     return { success: false, message: '⚠️ Jadual tidak dijumpai. / Schedule not found.' };
   } catch(err) { return { success: false, message: 'Ralat: ' + err.message }; }
 }
+
+// ── DASHBOARD — ROOM & MEETING MANAGEMENT ────────────────────
+
+// Get all rooms created by this user (newest first)
+function getMyRooms(email, token) {
+  try {
+    if (!validateToken(email, token)) return [];
+    email = email.toLowerCase().trim();
+    const sheet = getSpreadsheet().getSheetByName('Rooms');
+    if (!sheet) return [];
+    const data  = sheet.getDataRange().getValues();
+    const rooms = [];
+    // Rooms columns: [0] Room ID, [1] Room Name, [2] Dicipta Oleh, [3] Date-Time,
+    //                [4] Invite Link, [5] Status, [6] PDF Notes Link, [7] Catatan
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][2]).toLowerCase() === email) {
+        rooms.push({
+          roomId   : data[i][0],
+          roomName : data[i][1],
+          createdBy: data[i][2],
+          createdAt: data[i][3] instanceof Date
+                       ? data[i][3].toISOString()
+                       : String(data[i][3]),
+          status   : data[i][5] || 'Aktif',
+          pdfLink  : data[i][6] || ''
+        });
+      }
+    }
+    rooms.sort(function(a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+    return rooms;
+  } catch(e) { return []; }
+}
+
+// Rename a room (only the creator can rename)
+function renameRoom(email, token, roomId, newName) {
+  try {
+    if (!validateToken(email, token))
+      return { success: false, message: '⛔ Sesi tamat. / Session expired.' };
+    email = email.toLowerCase().trim();
+    const sheet = getSpreadsheet().getSheetByName('Rooms');
+    if (!sheet) return { success: false, message: '⚠️ Bilik tidak dijumpai.' };
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === roomId && String(data[i][2]).toLowerCase() === email) {
+        sheet.getRange(i + 1, 2).setValue(newName);
+        logActivity('RENAME_BILIK', email, 'Bilik diganti nama: ' + newName, roomId);
+        return { success: true };
+      }
+    }
+    return { success: false, message: '⚠️ Bilik tidak dijumpai atau tiada kebenaran.' };
+  } catch(e) { return { success: false, message: 'Ralat: ' + e.message }; }
+}
+
+// Edit a scheduled meeting's details
+function editScheduledMeeting(email, token, schedId, name, datetime, duration, description) {
+  try {
+    if (!validateToken(email, token))
+      return { success: false, message: '⛔ Sesi tamat. / Session expired.' };
+    email = email.toLowerCase().trim();
+    // Scheduled Meetings columns:
+    //  [0] Schedule ID, [1] Room Name, [2] Creator Email, [3] Scheduled DateTime,
+    //  [4] Duration (mins), [5] Description, [6] Room ID, [7] Status, [8] Created At
+    const sheet = getSpreadsheet().getSheetByName('Scheduled Meetings');
+    if (!sheet) return { success: false, message: '⚠️ Jadual tidak dijumpai.' };
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === schedId && String(data[i][2]).toLowerCase() === email) {
+        sheet.getRange(i + 1, 2).setValue(name);
+        sheet.getRange(i + 1, 4).setValue(new Date(datetime));
+        sheet.getRange(i + 1, 5).setValue(duration || 60);
+        sheet.getRange(i + 1, 6).setValue(description || '');
+        logActivity('EDIT_JADUAL', email, 'Jadual dikemaskini: ' + name, schedId);
+        return { success: true };
+      }
+    }
+    return { success: false, message: '⚠️ Jadual tidak dijumpai atau tiada kebenaran.' };
+  } catch(e) { return { success: false, message: 'Ralat: ' + e.message }; }
+}
+
+// Cancel (soft-delete) a scheduled meeting
+function cancelScheduledMeeting(email, token, schedId) {
+  try {
+    if (!validateToken(email, token))
+      return { success: false, message: '⛔ Sesi tamat. / Session expired.' };
+    email = email.toLowerCase().trim();
+    const sheet = getSpreadsheet().getSheetByName('Scheduled Meetings');
+    if (!sheet) return { success: false, message: '⚠️ Jadual tidak dijumpai.' };
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === schedId && String(data[i][2]).toLowerCase() === email) {
+        sheet.getRange(i + 1, 8).setValue('Cancelled');
+        logActivity('CANCEL_JADUAL', email, 'Jadual dibatalkan: ' + schedId, schedId);
+        return { success: true };
+      }
+    }
+    return { success: false, message: '⚠️ Jadual tidak dijumpai atau tiada kebenaran.' };
+  } catch(e) { return { success: false, message: 'Ralat: ' + e.message }; }
+}
