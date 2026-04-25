@@ -5,212 +5,304 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AxiCom Meeting Room</title>
 <style>
-:root{--blue:#1a73e8;--dark:#0d47a1;--green:#34a853;--red:#ea4335;--purple:#7c4dff;
-      --bg:#f0f4f8;--room-bg:#1a1a2e;--room-panel:#16213e;--room-card:#0f3460}
+:root{
+  --blue:#4f8ef7;--dark:#1a56c4;--green:#43d17a;--red:#ff5f5f;--purple:#a78bfa;
+  --glass:rgba(255,255,255,.1);--glass-b:rgba(255,255,255,.18);
+  --muted:rgba(255,255,255,.6);--text:#fff}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Arial,sans-serif}
+body{font-family:'Segoe UI',Arial,sans-serif;min-height:100vh;
+     background:linear-gradient(135deg,#0f0c29 0%,#302b63 50%,#24243e 100%);
+     background-attachment:fixed;overflow-x:hidden}
 .view{display:none}.view.active{display:flex}.hidden{display:none!important}
 
+/* Ambient blobs */
+body::before{content:'';position:fixed;width:700px;height:700px;border-radius:50%;
+  filter:blur(100px);z-index:0;pointer-events:none;
+  background:rgba(79,142,247,.22);top:-250px;left:-250px;
+  animation:b1 10s ease-in-out infinite}
+body::after{content:'';position:fixed;width:600px;height:600px;border-radius:50%;
+  filter:blur(90px);z-index:0;pointer-events:none;
+  background:rgba(167,139,250,.18);bottom:-200px;right:-200px;
+  animation:b2 13s ease-in-out infinite}
+@keyframes b1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(80px,50px) scale(1.1)}}
+@keyframes b2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-60px,-80px) scale(1.08)}}
+
 /* Page loader */
-.pg-loader{display:none;position:fixed;inset:0;background:rgba(255,255,255,.88);z-index:9999;
-           align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.pg-loader{display:none;position:fixed;inset:0;background:rgba(10,8,30,.92);
+  backdrop-filter:blur(12px);z-index:9999;
+  align-items:center;justify-content:center;flex-direction:column;gap:16px}
 .pg-loader.show{display:flex}
-.pg-loader p{color:#555;font-size:14px}
+.pg-loader p{color:var(--muted);font-size:14px}
 
 /* Spinner */
 .spin{display:inline-block;border-radius:50%;animation:doSpin .8s linear infinite}
 @keyframes doSpin{to{transform:rotate(360deg)}}
 
 /* Auth layout */
-.auth-screen{background:var(--bg);min-height:100vh;
+.auth-screen{min-height:100vh;position:relative;z-index:1;
              align-items:center;justify-content:center;padding:20px}
-.card{background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.12);
-      width:100%;max-width:440px;overflow:hidden}
-.card-header{padding:30px;text-align:center;color:#fff}
-.card-header .logo{font-size:46px;margin-bottom:8px}
-.card-header h1{font-size:22px;font-weight:700}
-.card-header p{opacity:.85;font-size:13px;margin-top:5px}
-.card-body{padding:26px}
+
+/* Glass card */
+.card{background:rgba(255,255,255,.09);backdrop-filter:blur(28px);
+  -webkit-backdrop-filter:blur(28px);border:1px solid var(--glass-b);
+  border-radius:24px;box-shadow:0 24px 80px rgba(0,0,0,.5);
+  width:100%;max-width:480px;overflow:hidden;position:relative}
+.card::before{content:'';position:absolute;inset:0;border-radius:24px;
+  background:linear-gradient(135deg,rgba(255,255,255,.07) 0%,transparent 60%);
+  pointer-events:none}
+.card-header{padding:32px;text-align:center;color:#fff;
+  background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.08)}
+.card-header .logo{font-size:48px;margin-bottom:10px}
+.card-header h1,.card-header h2{font-size:22px;font-weight:700;color:#fff}
+.card-header p{opacity:.75;font-size:13px;margin-top:6px;color:rgba(255,255,255,.8)}
+.card-body{padding:28px;position:relative;z-index:1}
 
 /* Forms */
-.fg{margin-bottom:16px}
-label{display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:6px}
-input{width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:8px;
-      font-size:14px;transition:.2s;outline:none}
-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
+.fg{margin-bottom:18px}
+label{display:block;font-size:13px;font-weight:600;
+  color:rgba(255,255,255,.8);margin-bottom:7px}
+input[type=text],input[type=email],input[type=password],input[type=datetime-local]{
+  width:100%;padding:13px 16px;background:rgba(255,255,255,.1);
+  border:1.5px solid rgba(255,255,255,.2);border-radius:10px;
+  font-size:14px;color:#fff;outline:none;transition:.2s;color-scheme:dark}
+input::placeholder{color:rgba(255,255,255,.35)}
+input:focus{border-color:rgba(79,142,247,.9);background:rgba(79,142,247,.12);
+  box-shadow:0 0 0 3px rgba(79,142,247,.2)}
 
 /* Buttons */
-.btn{width:100%;padding:13px;border:none;border-radius:8px;font-size:15px;
-     font-weight:600;cursor:pointer;transition:.2s;margin-top:4px}
-.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:var(--dark)}
-.btn-green{background:var(--green);color:#fff;margin-top:8px}
-.btn-green:hover{background:#2d8f47}
-.btn-purple{background:var(--purple);color:#fff}.btn-purple:hover{background:#5e35b1}
-.btn-gray{background:#f5f5f5;color:#333;margin-top:10px}.btn-gray:hover{background:#e0e0e0}
+.btn{width:100%;padding:14px;border-radius:10px;font-size:15px;
+  font-weight:600;cursor:pointer;transition:.25s;margin-top:6px;letter-spacing:.3px}
+.btn-blue{background:rgba(79,142,247,.8);color:#fff;border:1px solid rgba(79,142,247,.5)}
+.btn-blue:hover{background:rgba(79,142,247,1);transform:translateY(-1px);
+  box-shadow:0 8px 24px rgba(79,142,247,.4)}
+.btn-green{background:rgba(67,209,122,.75);color:#fff;
+  border:1px solid rgba(67,209,122,.5);margin-top:10px}
+.btn-green:hover{background:rgba(67,209,122,1);transform:translateY(-1px);
+  box-shadow:0 8px 24px rgba(67,209,122,.4)}
+.btn-purple{background:rgba(167,139,250,.8);color:#fff;border:1px solid rgba(167,139,250,.5)}
+.btn-purple:hover{background:rgba(167,139,250,1);transform:translateY(-1px);
+  box-shadow:0 8px 24px rgba(167,139,250,.4)}
+.btn-gray{background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);
+  border:1px solid rgba(255,255,255,.2);margin-top:10px}
+.btn-gray:hover{background:rgba(255,255,255,.22)}
 
 /* Tabs */
-.tabs{display:flex;background:#f5f5f5;border-radius:8px;padding:4px;margin-bottom:22px}
+.tabs{display:flex;background:rgba(0,0,0,.25);border-radius:10px;
+  padding:4px;margin-bottom:22px;gap:2px}
 .tab{flex:1;padding:10px;text-align:center;border:none;background:transparent;
-     border-radius:6px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s}
-.tab.active{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.1);color:var(--blue)}
+  border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;
+  transition:.2s;color:rgba(255,255,255,.55)}
+.tab.active{background:rgba(255,255,255,.16);color:#fff;
+  box-shadow:0 2px 10px rgba(0,0,0,.3)}
 
 /* Alerts */
-.alert{padding:12px 14px;border-radius:8px;font-size:14px;margin-bottom:14px;display:none}
-.alert-error{background:#fce8e6;color:var(--red);border:1px solid #f5c6c3}
-.alert-success{background:#e6f4ea;color:#1e8e3e;border:1px solid #a8d5b5}
+.alert{padding:12px 14px;border-radius:10px;font-size:13px;
+  margin-bottom:16px;display:none;line-height:1.5}
+.alert-error{background:rgba(234,67,53,.15);color:#ff8a80;
+  border:1px solid rgba(234,67,53,.3)}
+.alert-success{background:rgba(67,209,122,.15);color:#69f0ae;
+  border:1px solid rgba(67,209,122,.3)}
 
 /* Form spinner */
 .fspin{display:none;text-align:center;padding:8px}
 
 /* Divider */
-.divider{display:flex;align-items:center;gap:10px;margin:16px 0;font-size:12px;color:#999}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:#e0e0e0}
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0;
+  font-size:12px;color:rgba(255,255,255,.4)}
+.divider::before,.divider::after{content:'';flex:1;height:1px;
+  background:rgba(255,255,255,.15)}
 
 /* Password strength */
-.strength{height:4px;border-radius:2px;margin-top:6px;background:#e0e0e0;overflow:hidden}
+.strength{height:4px;border-radius:2px;margin-top:6px;
+  background:rgba(255,255,255,.1);overflow:hidden}
 .strength-bar{height:100%;width:0;transition:.3s;border-radius:2px}
-.hint{font-size:12px;color:#888;margin-top:4px}
+.hint{font-size:12px;color:rgba(255,255,255,.45);margin-top:4px}
 
-/* Room badge on join page */
-.room-badge{background:rgba(255,255,255,.2);border-radius:8px;
-            padding:8px 16px;font-size:14px;margin-top:12px;
-            display:inline-block;font-family:monospace}
+/* Room badge */
+.room-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);
+  border-radius:8px;padding:8px 18px;font-size:13px;margin-top:12px;
+  display:inline-block;font-family:monospace;color:rgba(255,255,255,.9)}
 
-/* Light modal */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
-          z-index:2000;align-items:center;justify-content:center;padding:20px}
+/* Glass modal (auth views) */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);
+  backdrop-filter:blur(10px);z-index:2000;
+  align-items:center;justify-content:center;padding:20px}
 .modal-bg.show{display:flex}
-.modal-box{background:#fff;border-radius:16px;padding:28px;
-           width:100%;max-width:430px;box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative}
-.modal-box h3{margin-bottom:18px;color:#333;font-size:18px}
-.modal-close-x{position:absolute;top:12px;right:14px;width:28px;height:28px;
-               border:none;background:transparent;font-size:18px;line-height:1;
-               cursor:pointer;color:#888;border-radius:50%;display:flex;
-               align-items:center;justify-content:center;transition:.2s}
-.modal-close-x:hover{background:#f0f0f0;color:#333}
-.inv-box{background:#f0f7ff;border:2px dashed var(--blue);border-radius:8px;
-         padding:14px;font-size:12px;word-break:break-all;
-         color:#333;font-family:monospace;margin:12px 0}
+.modal-box{background:rgba(15,12,45,.9);backdrop-filter:blur(28px);
+  -webkit-backdrop-filter:blur(28px);border:1px solid rgba(255,255,255,.18);
+  border-radius:20px;padding:28px;width:100%;max-width:450px;
+  box-shadow:0 24px 80px rgba(0,0,0,.6);position:relative;color:#fff}
+.modal-box h3{margin-bottom:18px;font-size:18px;color:#fff;font-weight:700}
+.modal-box p{color:rgba(255,255,255,.7);font-size:14px;margin-bottom:10px}
+.modal-box label{color:rgba(255,255,255,.8)}
+.modal-close-x{position:absolute;top:12px;right:14px;width:30px;height:30px;
+  border:none;background:rgba(255,255,255,.1);font-size:17px;
+  cursor:pointer;color:#fff;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;transition:.2s}
+.modal-close-x:hover{background:rgba(255,255,255,.2)}
+.inv-box{background:rgba(79,142,247,.1);border:1.5px dashed rgba(79,142,247,.5);
+  border-radius:10px;padding:14px;font-size:12px;word-break:break-all;
+  color:rgba(255,255,255,.85);font-family:monospace;margin:12px 0}
 
 /* Schedule section */
-.sched-section{margin-top:16px;border-top:1px solid #e0e0e0;padding-top:14px}
-.sched-section-title{font-size:13px;font-weight:700;color:#555;
-                     display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.sched-refresh{border:none;background:none;cursor:pointer;font-size:14px;color:var(--blue);padding:2px 6px}
-.sched-list{max-height:260px;overflow-y:auto}
-.sched-item{background:#f8f9fa;border-radius:8px;padding:10px 12px;
-            margin-bottom:8px;border-left:3px solid var(--blue)}
-.sched-item .sname{font-weight:600;font-size:13px;color:#333;margin-bottom:3px}
-.sched-item .smeta{font-size:11px;color:#888;margin-bottom:7px;line-height:1.5}
+.sched-section{margin-top:18px;border-top:1px solid rgba(255,255,255,.1);padding-top:16px}
+.sched-section-title{font-size:13px;font-weight:700;color:rgba(255,255,255,.8);
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sched-refresh{border:none;background:rgba(255,255,255,.1);cursor:pointer;
+  font-size:13px;color:#fff;padding:4px 8px;border-radius:6px}
+.sched-refresh:hover{background:rgba(255,255,255,.2)}
+.sched-list{max-height:240px;overflow-y:auto}
+.sched-item{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;padding:10px 12px;margin-bottom:8px;
+  border-left:3px solid var(--blue)}
+.sched-item .sname{font-weight:600;font-size:13px;color:#fff;margin-bottom:3px}
+.sched-item .smeta{font-size:11px;color:rgba(255,255,255,.5);
+  margin-bottom:7px;line-height:1.5}
 .sched-item .sbtns{display:flex;gap:5px}
-.sbtn-start{flex:1;padding:6px 8px;border:none;border-radius:5px;font-size:11px;
-            font-weight:600;cursor:pointer;background:var(--green);color:#fff;transition:.2s}
-.sbtn-start:hover{background:#2d8f47}
-.sbtn-copy{flex:1;padding:6px 8px;border:none;border-radius:5px;font-size:11px;
-           font-weight:600;cursor:pointer;background:#e8f0fe;color:var(--blue);transition:.2s}
-.sbtn-copy:hover{background:#d2e3fc}
-.no-sched{text-align:center;color:#999;font-size:12px;padding:14px 0}
-.sched-form-sel{width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:8px;
-                font-size:14px;outline:none;transition:.2s}
-.sched-form-sel:focus{border-color:var(--blue)}
-.sched-form-ta{width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:8px;
-               font-size:13px;outline:none;resize:none;min-height:70px;
-               font-family:inherit;transition:.2s}
-.sched-form-ta:focus{border-color:var(--blue)}
+.sbtn-start{flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:11px;
+  font-weight:600;cursor:pointer;background:rgba(67,209,122,.65);color:#fff;transition:.2s}
+.sbtn-start:hover{background:rgba(67,209,122,1)}
+.sbtn-copy{flex:1;padding:6px 8px;border:none;border-radius:6px;font-size:11px;
+  font-weight:600;cursor:pointer;
+  background:rgba(79,142,247,.3);color:rgba(255,255,255,.9);transition:.2s}
+.sbtn-copy:hover{background:rgba(79,142,247,.5)}
+.no-sched{text-align:center;color:rgba(255,255,255,.4);font-size:12px;padding:16px 0}
+.sched-form-sel{width:100%;padding:13px 16px;background:rgba(255,255,255,.1);
+  border:1.5px solid rgba(255,255,255,.2);border-radius:10px;font-size:14px;
+  color:#fff;outline:none;transition:.2s;color-scheme:dark}
+.sched-form-sel option{background:#1e1a3a;color:#fff}
+.sched-form-sel:focus{border-color:rgba(79,142,247,.9)}
+.sched-form-ta{width:100%;padding:13px 16px;background:rgba(255,255,255,.1);
+  border:1.5px solid rgba(255,255,255,.2);border-radius:10px;font-size:13px;
+  color:#fff;outline:none;resize:none;min-height:70px;
+  font-family:inherit;transition:.2s}
+.sched-form-ta::placeholder{color:rgba(255,255,255,.35)}
+.sched-form-ta:focus{border-color:rgba(79,142,247,.9);background:rgba(79,142,247,.12)}
 
 /* Toast */
-.toast{position:fixed;bottom:20px;right:20px;background:#333;color:#fff;
-       padding:12px 18px;border-radius:10px;font-size:13px;z-index:9999;
-       transform:translateY(100px);transition:.3s;opacity:0;max-width:320px}
+.toast{position:fixed;bottom:24px;right:24px;background:rgba(15,12,45,.92);
+  backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.15);color:#fff;
+  padding:12px 18px;border-radius:12px;font-size:13px;z-index:9999;
+  transform:translateY(120px);transition:.35s;opacity:0;max-width:320px}
 .toast.show{transform:translateY(0);opacity:1}
 
-/* ── ROOM VIEW ── */
-#viewRoom{background:var(--room-bg);color:#fff;height:100vh;
-          flex-direction:column;overflow:hidden}
-.topbar{background:var(--room-panel);padding:10px 16px;display:flex;
-        align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.1);
-        flex-shrink:0;flex-wrap:wrap}
-.topbar .logo{font-size:19px;font-weight:700}
-.room-idtag{background:rgba(255,255,255,.1);border-radius:6px;
-            padding:4px 10px;font-size:12px;font-family:monospace;color:#adb5bd}
-.tr{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-.sb{padding:7px 12px;border:none;border-radius:6px;font-size:12px;
-    font-weight:600;cursor:pointer;transition:.2s;white-space:nowrap}
-.sb-blue{background:var(--blue);color:#fff}
-.sb-green{background:var(--green);color:#fff}
-.sb-red{background:var(--red);color:#fff}
-.sb-purple{background:var(--purple);color:#fff}
-.sb-gray{background:#495057;color:#fff}
-.rm-main{display:flex;flex:1;overflow:hidden}
-.video-area{flex:1;display:flex;flex-direction:column;min-width:0}
-#jitsiWrap{flex:1;background:#000;display:flex;align-items:center;justify-content:center}
-.side{width:340px;background:var(--room-panel);
-      border-left:1px solid rgba(255,255,255,.1);
-      display:flex;flex-direction:column;flex-shrink:0}
-.ptabs{display:flex;border-bottom:1px solid rgba(255,255,255,.1)}
-.ptab{flex:1;padding:12px 6px;text-align:center;cursor:pointer;font-size:12px;
-      font-weight:600;border:none;background:transparent;color:#adb5bd;
-      border-bottom:2px solid transparent;transition:.2s}
+/* ── ROOM VIEW — FULL SCREEN ── */
+#viewRoom{background:#050510;color:#fff;height:100vh;
+  flex-direction:column;overflow:hidden;position:relative}
+
+/* Topbar */
+.topbar{background:rgba(5,5,20,.88);backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);padding:0 16px;height:52px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  flex-shrink:0;position:relative;z-index:100;overflow-x:auto}
+.topbar .logo{font-size:16px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.room-idtag{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+  border-radius:6px;padding:4px 10px;font-size:11px;font-family:monospace;
+  color:rgba(255,255,255,.7);white-space:nowrap;flex-shrink:1;
+  overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.tr{margin-left:auto;display:flex;gap:6px;flex-shrink:0}
+.sb{padding:6px 12px;border:1px solid rgba(255,255,255,.15);border-radius:7px;
+  font-size:12px;font-weight:600;cursor:pointer;transition:.2s;white-space:nowrap}
+.sb-blue{background:rgba(79,142,247,.45);color:#fff}
+.sb-blue:hover{background:rgba(79,142,247,.8);box-shadow:0 4px 14px rgba(79,142,247,.4)}
+.sb-green{background:rgba(67,209,122,.4);color:#fff}
+.sb-green:hover{background:rgba(67,209,122,.8);box-shadow:0 4px 14px rgba(67,209,122,.4)}
+.sb-red{background:rgba(255,95,95,.45);color:#fff}
+.sb-red:hover{background:rgba(255,95,95,.8)}
+.sb-purple{background:rgba(167,139,250,.45);color:#fff}
+.sb-purple:hover{background:rgba(167,139,250,.8);box-shadow:0 4px 14px rgba(167,139,250,.4)}
+.sb-gray{background:rgba(255,255,255,.12);color:rgba(255,255,255,.85)}
+.sb-gray:hover{background:rgba(255,255,255,.22)}
+
+/* Jitsi fills full screen below topbar */
+#jitsiWrap{position:absolute;top:52px;left:0;right:0;bottom:0;
+  background:#000;z-index:1;display:flex;align-items:center;justify-content:center}
+#jitsiWrap iframe{width:100%!important;height:100%!important}
+
+/* Floating glass side panel */
+.side{position:absolute;top:52px;right:0;bottom:0;width:360px;
+  background:rgba(5,5,20,.93);backdrop-filter:blur(28px);
+  -webkit-backdrop-filter:blur(28px);
+  border-left:1px solid rgba(255,255,255,.1);
+  display:flex;flex-direction:column;z-index:50;
+  transform:translateX(100%);
+  transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.side.open{transform:translateX(0)}
+
+.ptabs{display:flex;border-bottom:1px solid rgba(255,255,255,.08)}
+.ptab{flex:1;padding:12px 4px;text-align:center;cursor:pointer;font-size:12px;
+  font-weight:600;border:none;background:transparent;color:rgba(255,255,255,.5);
+  border-bottom:2px solid transparent;transition:.2s}
 .ptab.active{color:#fff;border-bottom-color:var(--blue)}
 .pcontent{display:none;flex:1;flex-direction:column;min-height:0}
 .pcontent.active{display:flex}
 .chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
-.cmsg{max-width:85%;padding:8px 12px;border-radius:12px;font-size:13px;
-      line-height:1.5;word-break:break-word}
-.cmsg.me{background:var(--blue);align-self:flex-end;border-bottom-right-radius:3px}
-.cmsg.other{background:var(--room-card);align-self:flex-start;border-bottom-left-radius:3px}
-.cmsg .sndr{font-size:10px;opacity:.7;margin-bottom:3px}
-.chat-in{padding:10px;border-top:1px solid rgba(255,255,255,.1);display:flex;gap:8px}
-.chat-ta{flex:1;background:var(--room-card);border:1px solid rgba(255,255,255,.2);
-         border-radius:8px;padding:10px;color:#fff;font-size:13px;outline:none;resize:none}
-.chat-ta::placeholder{color:#6c757d}
+.cmsg{max-width:86%;padding:8px 12px;border-radius:12px;
+  font-size:13px;line-height:1.5;word-break:break-word}
+.cmsg.me{background:rgba(79,142,247,.6);align-self:flex-end;border-bottom-right-radius:3px}
+.cmsg.other{background:rgba(255,255,255,.1);align-self:flex-start;border-bottom-left-radius:3px}
+.cmsg .sndr{font-size:10px;opacity:.65;margin-bottom:3px}
+.chat-in{padding:10px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:8px}
+.chat-ta{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;padding:10px;color:#fff;font-size:13px;outline:none;resize:none}
+.chat-ta::placeholder{color:rgba(255,255,255,.35)}
 .notes-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
-.ntitle{font-size:11px;font-weight:700;color:#adb5bd;
-        text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.tarea{background:var(--room-card);border-radius:8px;padding:10px;font-size:12px;
-       color:#ccc;min-height:120px;max-height:175px;overflow-y:auto;
-       line-height:1.7;border:1px solid rgba(255,255,255,.1)}
-.mnotes{width:100%;background:var(--room-card);border:1px solid rgba(255,255,255,.2);
-        border-radius:8px;padding:10px;color:#fff;font-size:13px;
-        min-height:100px;resize:vertical;outline:none;line-height:1.6}
-.mnotes::placeholder{color:#6c757d}
+.ntitle{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.tarea{background:rgba(255,255,255,.06);border-radius:8px;padding:10px;
+  font-size:12px;color:rgba(255,255,255,.8);min-height:120px;max-height:175px;
+  overflow-y:auto;line-height:1.7;border:1px solid rgba(255,255,255,.08)}
+.mnotes{width:100%;background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.15);border-radius:8px;
+  padding:10px;color:#fff;font-size:13px;min-height:100px;
+  resize:vertical;outline:none;line-height:1.6}
+.mnotes::placeholder{color:rgba(255,255,255,.3)}
 .sbadge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;
-        border-radius:12px;font-size:11px;font-weight:600}
-.sb-rec{background:rgba(234,67,53,.2);color:#ff6b6b;border:1px solid rgba(234,67,53,.3)}
-.sb-idle{background:rgba(108,117,125,.2);color:#adb5bd;border:1px solid rgba(108,117,125,.3)}
-.pulse{width:8px;height:8px;border-radius:50%;background:#ff6b6b;
-       animation:pulseA 1s ease-in-out infinite}
+  border-radius:12px;font-size:11px;font-weight:600}
+.sb-rec{background:rgba(255,95,95,.2);color:#ff8a80;border:1px solid rgba(255,95,95,.3)}
+.sb-idle{background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);
+  border:1px solid rgba(255,255,255,.12)}
+.pulse{width:8px;height:8px;border-radius:50%;background:#ff5f5f;
+  animation:pulseA 1s ease-in-out infinite}
 @keyframes pulseA{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
 
-/* Dark modal for room */
-.dmodal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
-           z-index:2000;align-items:center;justify-content:center;padding:20px}
+/* Dark glass modal for room */
+.dmodal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);
+  backdrop-filter:blur(10px);z-index:2000;
+  align-items:center;justify-content:center;padding:20px}
 .dmodal-bg.show{display:flex}
-.dmodal-box{background:var(--room-panel);border-radius:16px;padding:28px;
-            width:100%;max-width:460px;border:1px solid rgba(255,255,255,.1)}
-.dmodal-box h3{margin-bottom:16px;font-size:18px;color:#fff}
-.dinv-box{background:var(--room-bg);border:1px dashed rgba(255,255,255,.3);
-          border-radius:8px;padding:12px;font-size:12px;font-family:monospace;
-          word-break:break-all;color:#adb5bd;margin:12px 0}
-.res-link{background:var(--room-card);border:1px solid rgba(255,255,255,.1);
-          border-radius:8px;padding:12px;font-size:12px;word-break:break-all;
-          color:#81c784;margin:10px 0}
-
-.ai-sum-box{background:#0d2137;border:1px solid rgba(124,77,255,.4);border-radius:8px;
-            padding:14px;font-size:13px;color:#ccc;line-height:1.8;
-            white-space:pre-wrap;max-height:260px;overflow-y:auto;display:none}
+.dmodal-box{background:rgba(5,5,25,.94);backdrop-filter:blur(28px);
+  -webkit-backdrop-filter:blur(28px);border-radius:18px;padding:26px;
+  width:100%;max-width:460px;border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 24px 80px rgba(0,0,0,.7)}
+.dmodal-box h3{margin-bottom:16px;font-size:18px;color:#fff;font-weight:700}
+.dinv-box{background:rgba(79,142,247,.1);border:1px dashed rgba(79,142,247,.4);
+  border-radius:8px;padding:12px;font-size:12px;font-family:monospace;
+  word-break:break-all;color:rgba(255,255,255,.8);margin:12px 0}
+.res-link{background:rgba(67,209,122,.1);border:1px solid rgba(67,209,122,.25);
+  border-radius:8px;padding:12px;font-size:12px;word-break:break-all;
+  color:#69f0ae;margin:10px 0}
+.ai-sum-box{background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.3);
+  border-radius:8px;padding:14px;font-size:13px;color:rgba(255,255,255,.85);
+  line-height:1.8;white-space:pre-wrap;max-height:260px;overflow-y:auto;display:none}
 
 /* Room loader */
-.rm-loader{display:none;position:fixed;inset:0;background:rgba(26,26,46,.92);
-           z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.rm-loader{display:none;position:fixed;inset:0;background:rgba(5,5,20,.94);
+  backdrop-filter:blur(16px);z-index:9999;
+  align-items:center;justify-content:center;flex-direction:column;gap:14px}
 .rm-loader.show{display:flex}
-.rm-loader p{color:#adb5bd;font-size:14px}
+.rm-loader p{color:rgba(255,255,255,.7);font-size:14px}
+
+/* Scrollbars */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.35)}
 
 @media(max-width:768px){
-  .side{width:100%;max-height:290px;border-left:none;
-        border-top:1px solid rgba(255,255,255,.1)}
-  .rm-main{flex-direction:column}
-  #jitsiWrap{min-height:200px}
+  .side{width:100%;border-left:none;border-top:1px solid rgba(255,255,255,.1)}
+  .room-idtag{max-width:100px}
 }
 </style>
 </head>
@@ -274,8 +366,9 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
       <!-- Create room sub-panel -->
       <div id="hPanelCreate" class="hidden">
         <div id="homeGreeting"
-          style="background:#e8f5e9;border-radius:8px;padding:12px 14px;
-                 margin-bottom:16px;font-size:14px;color:#2e7d32"></div>
+          style="background:rgba(67,209,122,.15);border:1px solid rgba(67,209,122,.3);
+                 border-radius:10px;padding:12px 14px;
+                 margin-bottom:16px;font-size:14px;color:#69f0ae"></div>
         <div class="fg">
           <label>🏠 Nama Bilik / Room Name</label>
           <input type="text" id="roomName" placeholder="cth: Mesyuarat Projek ABC">
@@ -338,7 +431,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
       </div>
       <div class="fg">
         <label>📅 Tarikh &amp; Masa / Date &amp; Time</label>
-        <input type="datetime-local" id="schedDatetime" style="width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none">
+        <input type="datetime-local" id="schedDatetime">
       </div>
       <div class="fg">
         <label>⏱️ Tempoh / Duration</label>
@@ -500,96 +593,94 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
 
   <!-- Room page loader -->
   <div class="rm-loader" id="rmLoader">
-    <div class="spin" style="width:40px;height:40px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--blue)"></div>
+    <div class="spin" style="width:40px;height:40px;border:4px solid rgba(255,255,255,.15);border-top-color:var(--blue)"></div>
     <p id="rmLoaderMsg">Memuatkan bilik... / Loading room...</p>
   </div>
 
   <!-- Top bar -->
   <div class="topbar">
-    <span class="logo">🖥️ AxiCom Meeting Room</span>
-    <span class="room-idtag" id="rmTopId">🔑 Memuatkan...</span>
-    <span class="sbadge sb-idle" id="recBadge">⏸ Nota Berhenti</span>
+    <span class="logo">🖥️ AxiCom</span>
+    <span class="room-idtag" id="rmTopId">🔑 ...</span>
+    <span class="sbadge sb-idle" id="recBadge">⏸ Nota</span>
     <div class="tr">
       <button class="sb sb-blue"   onclick="showRmInvite()">🔗 Jemput</button>
-      <button class="sb sb-purple" id="btnRec" onclick="toggleSpeech()">🎙️ Mula Nota</button>
-      <button class="sb sb-green"  onclick="showRmSave()">💾 Simpan PDF</button>
+      <button class="sb sb-purple" id="btnRec" onclick="toggleSpeech()">🎙️ Nota</button>
+      <button class="sb sb-green"  onclick="showRmSave()">💾 PDF</button>
+      <button class="sb sb-gray"   id="btnPanel" onclick="toggleSidePanel()">💬 Panel</button>
       <button class="sb sb-red"    onclick="doLeave()">🚪 Keluar</button>
     </div>
   </div>
 
-  <!-- Main layout -->
-  <div class="rm-main">
-    <div class="video-area">
-      <div id="jitsiWrap">
-        <p style="color:#555;font-size:14px">Memuatkan video... / Loading video...</p>
+  <!-- Jitsi — fills full screen below topbar -->
+  <div id="jitsiWrap">
+    <p style="color:rgba(255,255,255,.35);font-size:14px">Memuatkan video... / Loading video...</p>
+  </div>
+
+  <!-- Floating glass side panel -->
+  <div class="side" id="sidePanel">
+    <div class="ptabs">
+      <button class="ptab active" onclick="rmPanel('Chat')">💬 Chat</button>
+      <button class="ptab"        onclick="rmPanel('Notes')">📝 Nota</button>
+      <button class="ptab"        onclick="rmPanel('Info')">ℹ️ Info</button>
+    </div>
+
+    <!-- Chat panel -->
+    <div class="pcontent active" id="rmPanelChat">
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="cmsg other">
+          <div class="sndr">AxiCom Bot</div>
+          👋 Selamat datang! Guna tab <strong>Nota</strong> untuk transkripsi.<br>
+          <em>Welcome! Use the Notes tab for transcription.</em>
+        </div>
+      </div>
+      <div class="chat-in">
+        <textarea class="chat-ta" id="chatInput" rows="2"
+          placeholder="Taip mesej... / Type message..."
+          onkeypress="handleChatKey(event)"></textarea>
+        <button class="sb sb-blue" onclick="sendChat()"
+          style="height:fit-content;align-self:flex-end;padding:10px 14px">➤</button>
       </div>
     </div>
 
-    <div class="side">
-      <div class="ptabs">
-        <button class="ptab active" onclick="rmPanel('Chat')">💬 Chat</button>
-        <button class="ptab"        onclick="rmPanel('Notes')">📝 Nota</button>
-        <button class="ptab"        onclick="rmPanel('Info')">ℹ️ Info</button>
-      </div>
-
-      <!-- Chat panel -->
-      <div class="pcontent active" id="rmPanelChat">
-        <div class="chat-msgs" id="chatMsgs">
-          <div class="cmsg other">
-            <div class="sndr">AxiCom Bot</div>
-            👋 Selamat datang! Guna tab <strong>Nota</strong> untuk transkripsi.<br>
-            <em>Welcome! Use the Notes tab for transcription.</em>
+    <!-- Notes panel -->
+    <div class="pcontent" id="rmPanelNotes">
+      <div class="notes-body">
+        <div>
+          <div class="ntitle">🎙️ Transkrip Auto (BM + EN)</div>
+          <div style="margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap">
+            <button class="sb sb-purple" id="btnBM"  onclick="setLang('ms-MY')" style="font-size:11px">🇲🇾 BM</button>
+            <button class="sb sb-gray"   id="btnEN"  onclick="setLang('en-US')" style="font-size:11px">🇬🇧 EN</button>
+            <button class="sb sb-gray"   id="btnMix" onclick="setLang('mix')"   style="font-size:11px">🔀 BM+EN</button>
+          </div>
+          <div id="transcript" class="tarea">
+            Tekan "Nota" untuk mulakan transkripsi...<br>
+            <em>Press "Nota" to start transcription...</em>
           </div>
         </div>
-        <div class="chat-in">
-          <textarea class="chat-ta" id="chatInput" rows="2"
-            placeholder="Taip mesej... / Type message..."
-            onkeypress="handleChatKey(event)"></textarea>
-          <button class="sb sb-blue" onclick="sendChat()"
-            style="height:fit-content;align-self:flex-end;padding:10px 14px">➤</button>
+        <div>
+          <div class="ntitle">✍️ Nota Manual</div>
+          <textarea class="mnotes" id="manNotes"
+            placeholder="Tulis nota mesyuarat... / Write meeting notes...&#10;&#10;- Agenda: ...&#10;- Keputusan / Decision: ...&#10;- Tindakan / Action: ..."></textarea>
         </div>
-      </div>
-
-      <!-- Notes panel -->
-      <div class="pcontent" id="rmPanelNotes">
-        <div class="notes-body">
-          <div>
-            <div class="ntitle">🎙️ Transkrip Auto (BM + EN)</div>
-            <div style="margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap">
-              <button class="sb sb-purple" id="btnBM"  onclick="setLang('ms-MY')" style="font-size:11px">🇲🇾 BM</button>
-              <button class="sb sb-gray"   id="btnEN"  onclick="setLang('en-US')" style="font-size:11px">🇬🇧 EN</button>
-              <button class="sb sb-gray"   id="btnMix" onclick="setLang('mix')"   style="font-size:11px">🔀 BM+EN</button>
-            </div>
-            <div id="transcript" class="tarea">
-              Tekan "Mula Nota" untuk mulakan transkripsi...<br>
-              <em>Press "Mula Nota" to start transcription...</em>
-            </div>
+        <div>
+          <div class="ntitle">🤖 AI Ringkasan / AI Summary</div>
+          <div id="aiSumBox" class="ai-sum-box"></div>
+          <div class="fspin" id="spAiSum">
+            <div class="spin" style="width:22px;height:22px;border:3px solid rgba(255,255,255,.15);border-top-color:#a78bfa"></div>
           </div>
-          <div>
-            <div class="ntitle">✍️ Nota Manual</div>
-            <textarea class="mnotes" id="manNotes"
-              placeholder="Tulis nota mesyuarat... / Write meeting notes...&#10;&#10;- Agenda: ...&#10;- Keputusan / Decision: ...&#10;- Tindakan / Action: ..."></textarea>
-          </div>
-          <div>
-            <div class="ntitle">🤖 AI Ringkasan / AI Summary</div>
-            <div id="aiSumBox" class="ai-sum-box"></div>
-            <div class="fspin" id="spAiSum">
-              <div class="spin" style="width:22px;height:22px;border:3px solid rgba(255,255,255,.2);border-top-color:#7c4dff"></div>
-            </div>
-          </div>
-          <div style="display:flex;gap:6px">
-            <button class="sb sb-gray"   onclick="clearTx()"    style="flex:1;padding:9px">🗑️ Kosong</button>
-            <button class="sb sb-purple" onclick="doAiSummary()" style="flex:1;padding:9px">🤖 AI Ringkasan</button>
-            <button class="sb sb-green"  onclick="showRmSave()"  style="flex:1;padding:9px">💾 PDF</button>
-          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="sb sb-gray"   onclick="clearTx()"    style="flex:1;padding:9px">🗑️ Kosong</button>
+          <button class="sb sb-purple" onclick="doAiSummary()" style="flex:1;padding:9px">🤖 AI</button>
+          <button class="sb sb-green"  onclick="showRmSave()"  style="flex:1;padding:9px">💾 PDF</button>
         </div>
       </div>
+    </div>
 
-      <!-- Info panel -->
-      <div class="pcontent" id="rmPanelInfo">
-        <div style="padding:16px;font-size:13px;color:#ccc;line-height:1.9">
-          <div id="rmInfo">Memuatkan... / Loading...</div>
-        </div>
+    <!-- Info panel -->
+    <div class="pcontent" id="rmPanelInfo">
+      <div style="padding:16px;font-size:13px;color:rgba(255,255,255,.75);line-height:1.9">
+        <div id="rmInfo">Memuatkan... / Loading...</div>
       </div>
     </div>
   </div>
@@ -598,7 +689,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
   <div class="dmodal-bg" id="rmInviteModal">
     <div class="dmodal-box">
       <h3>🔗 Pautan Jemputan / Invite Link</h3>
-      <p style="font-size:13px;color:#adb5bd;margin-bottom:8px">
+      <p style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:8px">
         Kongsi pautan ini dengan peserta lain:<br>
         <em>Share this link with participants:</em>
       </p>
@@ -614,14 +705,14 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
   <div class="dmodal-bg" id="rmSaveModal">
     <div class="dmodal-box">
       <h3>💾 Simpan Nota sebagai PDF</h3>
-      <p style="font-size:13px;color:#adb5bd;margin-bottom:12px">
+      <p style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:12px">
         Nota akan disimpan ke Google Drive dan dilog dalam Sheets.<br>
         <em>Notes will be saved to Drive and logged in Sheets.</em>
       </p>
-      <div id="saveStatus" style="font-size:13px;color:#adb5bd;min-height:36px"></div>
+      <div id="saveStatus" style="font-size:13px;color:rgba(255,255,255,.6);min-height:36px"></div>
       <div id="pdfLinkBox" class="res-link" style="display:none"></div>
       <div style="display:flex;gap:8px;margin-top:12px">
-        <button class="sb sb-green" id="btnSaveNow" onclick="doSaveNotes()" style="flex:1;padding:10px">✅ Simpan Sekarang</button>
+        <button class="sb sb-green" id="btnSaveNow" onclick="doSaveNotes()" style="flex:1;padding:10px">✅ Simpan</button>
         <button class="sb sb-gray"  onclick="closeDModal('rmSaveModal')"   style="flex:1;padding:10px">✕ Tutup</button>
       </div>
     </div>
@@ -1026,28 +1117,29 @@ function initRoom() {
   if (!SESSION || !ROOM_ID) { showView('home'); return; }
   roomInviteUrl = APP_URL + '?page=join&room=' + ROOM_ID;
   document.getElementById('rmInviteLink').textContent = roomInviteUrl;
-  loadRoomInfo();
-  initJitsi();
   initSpeech();
-}
-function loadRoomInfo() {
+  // Get room info first to obtain the unique jitsiRoom token
   google.script.run
     .withSuccessHandler(function(info) {
-      var name = (info && info.roomName) ? info.roomName : ROOM_ID;
+      var name      = (info && info.roomName)  ? info.roomName  : ROOM_ID;
+      var jitsiRoom = (info && info.jitsiRoom) ? info.jitsiRoom
+                      : 'vidchat' + ROOM_ID.replace(/-/g,'');
       document.getElementById('rmTopId').textContent = '🔑 ' + name + ' (' + ROOM_ID + ')';
       document.getElementById('rmInfo').innerHTML =
         '<strong style="color:#fff">📋 Maklumat Bilik / Room Info</strong><br><br>' +
-        '<span style="color:#adb5bd">Nama / Name:</span> <strong>' + esc(name) + '</strong><br>' +
-        '<span style="color:#adb5bd">Room ID:</span> <code style="color:#81c784">' + esc(ROOM_ID) + '</code><br>' +
-        '<span style="color:#adb5bd">Pengguna / User:</span> <strong>' + esc(SESSION.name) + '</strong><br>' +
-        '<span style="color:#adb5bd">E-mel / Email:</span> ' + esc(SESSION.email) + '<br><br>' +
-        '<span style="color:#adb5bd">🎙️ Bahasa Transkripsi:</span><br>' +
+        '<span style="color:rgba(255,255,255,.6)">Nama / Name:</span> <strong>' + esc(name) + '</strong><br>' +
+        '<span style="color:rgba(255,255,255,.6)">Room ID:</span> <code style="color:#69f0ae">' + esc(ROOM_ID) + '</code><br>' +
+        '<span style="color:rgba(255,255,255,.6)">Pengguna / User:</span> <strong>' + esc(SESSION.name) + '</strong><br>' +
+        '<span style="color:rgba(255,255,255,.6)">E-mel / Email:</span> ' + esc(SESSION.email) + '<br><br>' +
+        '<span style="color:rgba(255,255,255,.6)">🎙️ Bahasa Transkripsi:</span><br>' +
         'Bahasa Melayu (ms-MY) + English (en-US)<br><br>' +
-        '<span style="color:#adb5bd">💾 Fail disimpan ke / Files saved to:</span><br>' +
+        '<span style="color:rgba(255,255,255,.6)">💾 Fail disimpan ke / Files saved to:</span><br>' +
         'Google Drive (PDF Notes)';
+      initJitsi(jitsiRoom);
     })
     .withFailureHandler(function() {
       document.getElementById('rmTopId').textContent = '🔑 ' + ROOM_ID;
+      initJitsi('vidchat' + ROOM_ID.replace(/-/g,''));
     })
     .getRoomInfo(ROOM_ID);
 }
@@ -1055,22 +1147,23 @@ function loadRoomInfo() {
 // ================================================================
 //  JITSI
 // ================================================================
-function initJitsi() {
+function initJitsi(jitsiRoom) {
   var wrap = document.getElementById('jitsiWrap');
   wrap.innerHTML = '';
   try {
     jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', {
-      roomName: 'vidchat-' + ROOM_ID.replace(/-/g,''),
+      roomName: jitsiRoom,
       width: '100%',
       height: '100%',
       parentNode: wrap,
-      userInfo: { displayName: SESSION.name, email: SESSION.email },
+      userInfo: { displayName: SESSION.name, email: SESSION.email || '' },
       configOverwrite: {
         startWithAudioMuted : false,
         startWithVideoMuted : false,
         enableWelcomePage   : false,
         disableDeepLinking  : true,
         prejoinPageEnabled  : false,
+        requireDisplayName  : false,
         disableLobby        : true,
         lobby               : { enabled: false, autoKnock: false },
         enableLobbyChat     : false,
@@ -1084,14 +1177,16 @@ function initJitsi() {
       interfaceConfigOverwrite: {
         SHOW_JITSI_WATERMARK      : false,
         SHOW_WATERMARK_FOR_GUESTS : false,
-        TOOLBAR_ALWAYS_VISIBLE    : true
+        TOOLBAR_ALWAYS_VISIBLE    : true,
+        DISPLAY_WELCOME_FOOTER    : false
       }
     });
     jitsiApi.addEventListener('videoConferenceLeft', function() { doLeave(); });
-    // Disable lobby as soon as this user becomes moderator (prevents "Asking to join")
+    // Disable lobby as soon as the local user joins
     jitsiApi.addEventListener('videoConferenceJoined', function() {
       try { jitsiApi.executeCommand('toggleLobby', false); } catch(e) {}
     });
+    // Re-disable lobby whenever this user is promoted to moderator
     jitsiApi.addEventListener('participantRoleChanged', function(ev) {
       if (ev && ev.role === 'moderator') {
         try { jitsiApi.executeCommand('toggleLobby', false); } catch(e) {}
@@ -1099,8 +1194,10 @@ function initJitsi() {
     });
   } catch(e) {
     wrap.innerHTML =
-      '<p style="color:#ff6b6b;padding:20px;text-align:center">' +
-      '⚠️ Ralat memuatkan video:<br>' + esc(e.message) + '</p>';
+      '<div style="color:#ff8a80;padding:24px;text-align:center;' +
+      'background:rgba(255,95,95,.1);margin:20px;border-radius:12px;' +
+      'border:1px solid rgba(255,95,95,.3)">' +
+      '⚠️ Ralat memuatkan video:<br><small>' + esc(e.message) + '</small></div>';
   }
 }
 
@@ -1231,6 +1328,13 @@ function addMsg(sender, text, type) {
 // ================================================================
 //  ROOM PANELS
 // ================================================================
+function toggleSidePanel() {
+  var panel = document.getElementById('sidePanel');
+  panel.classList.toggle('open');
+  var btn = document.getElementById('btnPanel');
+  if (btn) btn.textContent = panel.classList.contains('open') ? '✕ Panel' : '💬 Panel';
+}
+
 function rmPanel(name) {
   var names = ['Chat','Notes','Info'];
   document.querySelectorAll('.ptab').forEach(function(t, i) {

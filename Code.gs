@@ -103,12 +103,13 @@ function createRoom(email, token, roomName) {
       return { success: false, message: '⛔ Sesi tamat. Sila log masuk semula. / Session expired.' };
     const ss         = getSpreadsheet();
     const sheet      = getOrCreateSheet(ss, 'Rooms',
-      ['Room ID','Room Name','Dicipta Oleh','Date-Time','Invite Link','Status','PDF Notes Link','Catatan']);
+      ['Room ID','Room Name','Dicipta Oleh','Date-Time','Invite Link','Status','PDF Notes Link','Catatan','Jitsi Room']);
     const roomId     = generateRoomId();
+    const jitsiRoom  = generateJitsiRoom();
     const inviteLink = getWebAppUrl() + '?page=join&room=' + roomId;
-    sheet.appendRow([roomId, roomName, email, new Date(), inviteLink, 'Aktif', '', '']);
+    sheet.appendRow([roomId, roomName, email, new Date(), inviteLink, 'Aktif', '', '', jitsiRoom]);
     logActivity('BUAT_BILIK', email, 'Bilik dibuat: ' + roomName, roomId);
-    return { success: true, roomId, inviteLink, roomName,
+    return { success: true, roomId, inviteLink, roomName, jitsiRoom,
              message: '✅ Bilik berjaya dibuat! / Room created successfully!' };
   } catch(err) { return { success: false, message: 'Ralat: ' + err.message }; }
 }
@@ -138,7 +139,8 @@ function getRoomInfo(roomId) {
     const data  = sheet.getDataRange().getValues();
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === roomId)
-        return { roomId: data[i][0], roomName: data[i][1], createdBy: data[i][2], status: data[i][5] };
+        return { roomId: data[i][0], roomName: data[i][1], createdBy: data[i][2],
+                 status: data[i][5], jitsiRoom: data[i][8] || '' };
     }
     return null;
   } catch(e) { return null; }
@@ -307,6 +309,13 @@ function generateRoomId() {
     if (i === 3 || i === 6) id += '-';
     id += chars[Math.floor(Math.random() * chars.length)];
   }
+  return id;
+}
+
+function generateJitsiRoom() {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let id = 'ax';
+  for (let i = 0; i < 16; i++) id += chars[Math.floor(Math.random() * chars.length)];
   return id;
 }
 
